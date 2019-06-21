@@ -1,4 +1,4 @@
-# RNASeq Analysis for Coastal Acidification, Sewage Effluent, and Multiple Stressor of Eastern Oyster Larvae -- [The Puritz Lab of Marine Evolutionary Ecology](http://www.marineevoeco.com/)
+# RNASeq Analysis for Coastal Acidification, Sewage Effluent, and Multiple Stressors on Eastern Oyster Larvae -- [The Puritz Lab of Marine Evolutionary Ecology](http://www.marineevoeco.com/)
 
 **The Rational Behind Studying Multiple Stressors**  
 
