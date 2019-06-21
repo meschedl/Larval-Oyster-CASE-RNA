@@ -1,6 +1,8 @@
 
 # CASE RNASeq Analysis  
 
+**Author: Maggie Schedl**
+
 Steps of Analysis:
 - Looking at read counts
 - QC, visualization, and trimming of reads  
@@ -378,4 +380,4 @@ Then I uploaded it to KITT so I could use it in the same directory as the count 
 ¯\_(ツ)_/¯ scp -P zzzz /Users/maggieschedl/Desktop/treatment_data.csv mschedl@KITT.uri.edu:/home/mschedl/Working-CASE-RNA/histat/stringtie/restring
 ```
 
-Just the gene_count_matrix.csv and the treatment_data.csv are needed for DESeq2. See the Rmarkdown file that is set for GitHub view for all Differential Expression analysis! 
+Just the gene_count_matrix.csv and the treatment_data.csv are needed for DESeq2. See the Rmarkdown file that is set for GitHub view for all Differential Expression analysis!
