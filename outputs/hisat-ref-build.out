@@ -1,0 +1,333 @@
+Settings:
+  Output files: "/home/mschedl/Working-CASE-RNA/histat//cvirginica_hisat_edited.*.ht2"
+  Line rate: 6 (line is 64 bytes)
+  Lines per side: 1 (side is 64 bytes)
+  Offset rate: 4 (one in 16)
+  FTable chars: 10
+  Strings: unpacked
+  Local offset rate: 3 (one in 8)
+  Local fTable chars: 6
+  Local sequence length: 57344
+  Local sequence overlap between two consecutive indexes: 1024
+  Endianness: little
+  Actual local endianness: little
+  Sanity checking: disabled
+  Assertions: disabled
+  Random seed: 0
+  Sizeofs: void*:8, int:4, long:8, size_t:8
+Input files DNA, FASTA:
+  /home/mschedl/Working-CASE-RNA/histat//cvir_edited.fa
+Reading reference sizes
+  Time reading reference sizes: 00:00:06
+Calculating joined length
+Writing header
+Reserving space for joined string
+Joining reference sequences
+  Time to join reference sequences: 00:00:05
+  Time to read SNPs and splice sites: 00:00:00
+Using parameters --bmax 128376624 --dcv 1024
+  Doing ahead-of-time memory usage test
+  Passed!  Constructing with these parameters: --bmax 128376624 --dcv 1024
+Constructing suffix-array element generator
+Building DifferenceCoverSample
+  Building sPrime
+  Building sPrimeOrder
+  V-Sorting samples
+  V-Sorting samples time: 00:00:19
+  Allocating rank array
+  Ranking v-sort output
+  Ranking v-sort output time: 00:00:06
+  Invoking Larsson-Sadakane on ranks
+  Invoking Larsson-Sadakane on ranks time: 00:00:08
+  Sanity-checking and returning
+Building samples
+Reserving space for 12 sample suffixes
+Generating random suffixes
+QSorting 12 sample offsets, eliminating duplicates
+QSorting sample offsets, eliminating duplicates time: 00:00:00
+Multikey QSorting 12 samples
+  (Using difference cover)
+  Multikey QSorting samples time: 00:00:00
+Calculating bucket sizes
+Splitting and merging
+  Splitting and merging time: 00:00:00
+Avg bucket size: 7.6075e+07 (target: 128376623)
+Converting suffix-array elements to index image
+Allocating ftab, absorbFtab
+Entering GFM loop
+Getting block 1 of 9
+  Reserving size (128376624) for bucket 1
+  Calculating Z arrays for bucket 1
+  Entering block accumulator loop for bucket 1:
+  bucket 1: 10%
+  bucket 1: 20%
+  bucket 1: 30%
+  bucket 1: 40%
+  bucket 1: 50%
+  bucket 1: 60%
+  bucket 1: 70%
+  bucket 1: 80%
+  bucket 1: 90%
+  bucket 1: 100%
+  Sorting block of length 60277335 for bucket 1
+  (Using difference cover)
+  Sorting block time: 00:00:51
+Returning block of 60277336 for bucket 1
+Getting block 2 of 9
+  Reserving size (128376624) for bucket 2
+  Calculating Z arrays for bucket 2
+  Entering block accumulator loop for bucket 2:
+  bucket 2: 10%
+  bucket 2: 20%
+  bucket 2: 30%
+  bucket 2: 40%
+  bucket 2: 50%
+  bucket 2: 60%
+  bucket 2: 70%
+  bucket 2: 80%
+  bucket 2: 90%
+  bucket 2: 100%
+  Sorting block of length 87734215 for bucket 2
+  (Using difference cover)
+  Sorting block time: 00:01:06
+Returning block of 87734216 for bucket 2
+Getting block 3 of 9
+  Reserving size (128376624) for bucket 3
+  Calculating Z arrays for bucket 3
+  Entering block accumulator loop for bucket 3:
+  bucket 3: 10%
+  bucket 3: 20%
+  bucket 3: 30%
+  bucket 3: 40%
+  bucket 3: 50%
+  bucket 3: 60%
+  bucket 3: 70%
+  bucket 3: 80%
+  bucket 3: 90%
+  bucket 3: 100%
+  Sorting block of length 94064761 for bucket 3
+  (Using difference cover)
+  Sorting block time: 00:01:14
+Returning block of 94064762 for bucket 3
+Getting block 4 of 9
+  Reserving size (128376624) for bucket 4
+  Calculating Z arrays for bucket 4
+  Entering block accumulator loop for bucket 4:
+  bucket 4: 10%
+  bucket 4: 20%
+  bucket 4: 30%
+  bucket 4: 40%
+  bucket 4: 50%
+  bucket 4: 60%
+  bucket 4: 70%
+  bucket 4: 80%
+  bucket 4: 90%
+  bucket 4: 100%
+  Sorting block of length 41331271 for bucket 4
+  (Using difference cover)
+  Sorting block time: 00:00:31
+Returning block of 41331272 for bucket 4
+Getting block 5 of 9
+  Reserving size (128376624) for bucket 5
+  Calculating Z arrays for bucket 5
+  Entering block accumulator loop for bucket 5:
+  bucket 5: 10%
+  bucket 5: 20%
+  bucket 5: 30%
+  bucket 5: 40%
+  bucket 5: 50%
+  bucket 5: 60%
+  bucket 5: 70%
+  bucket 5: 80%
+  bucket 5: 90%
+  bucket 5: 100%
+  Sorting block of length 108325211 for bucket 5
+  (Using difference cover)
+  Sorting block time: 00:01:04
+Returning block of 108325212 for bucket 5
+Getting block 6 of 9
+  Reserving size (128376624) for bucket 6
+  Calculating Z arrays for bucket 6
+  Entering block accumulator loop for bucket 6:
+  bucket 6: 10%
+  bucket 6: 20%
+  bucket 6: 30%
+  bucket 6: 40%
+  bucket 6: 50%
+  bucket 6: 60%
+  bucket 6: 70%
+  bucket 6: 80%
+  bucket 6: 90%
+  bucket 6: 100%
+  Sorting block of length 38759411 for bucket 6
+  (Using difference cover)
+  Sorting block time: 00:00:21
+Returning block of 38759412 for bucket 6
+Getting block 7 of 9
+  Reserving size (128376624) for bucket 7
+  Calculating Z arrays for bucket 7
+  Entering block accumulator loop for bucket 7:
+  bucket 7: 10%
+  bucket 7: 20%
+  bucket 7: 30%
+  bucket 7: 40%
+  bucket 7: 50%
+  bucket 7: 60%
+  bucket 7: 70%
+  bucket 7: 80%
+  bucket 7: 90%
+  bucket 7: 100%
+  Sorting block of length 100469340 for bucket 7
+  (Using difference cover)
+  Sorting block time: 00:01:15
+Returning block of 100469341 for bucket 7
+Getting block 8 of 9
+  Reserving size (128376624) for bucket 8
+  Calculating Z arrays for bucket 8
+  Entering block accumulator loop for bucket 8:
+  bucket 8: 10%
+  bucket 8: 20%
+  bucket 8: 30%
+  bucket 8: 40%
+  bucket 8: 50%
+  bucket 8: 60%
+  bucket 8: 70%
+  bucket 8: 80%
+  bucket 8: 90%
+  bucket 8: 100%
+  Sorting block of length 74000311 for bucket 8
+  (Using difference cover)
+  Sorting block time: 00:00:58
+Returning block of 74000312 for bucket 8
+Getting block 9 of 9
+  Reserving size (128376624) for bucket 9
+  Calculating Z arrays for bucket 9
+  Entering block accumulator loop for bucket 9:
+  bucket 9: 10%
+  bucket 9: 20%
+  bucket 9: 30%
+  bucket 9: 40%
+  bucket 9: 50%
+  bucket 9: 60%
+  bucket 9: 70%
+  bucket 9: 80%
+  bucket 9: 90%
+  bucket 9: 100%
+  Sorting block of length 79713465 for bucket 9
+  (Using difference cover)
+  Sorting block time: 00:01:01
+Returning block of 79713466 for bucket 9
+Exited GFM loop
+fchr[A]: 0
+fchr[C]: 223134775
+fchr[G]: 342363894
+fchr[T]: 461631571
+fchr[$]: 684675328
+Exiting GFM::buildToDisk()
+Returning from initFromVector
+Wrote 232428919 bytes to primary GFM file: /home/mschedl/Working-CASE-RNA/histat//cvirginica_hisat_edited.1.ht2
+Wrote 171168840 bytes to secondary GFM file: /home/mschedl/Working-CASE-RNA/histat//cvirginica_hisat_edited.2.ht2
+Re-opening _in1 and _in2 as input streams
+Returning from GFM constructor
+Returning from initFromVector
+Wrote 300452259 bytes to primary GFM file: /home/mschedl/Working-CASE-RNA/histat//cvirginica_hisat_edited.5.ht2
+Wrote 174303172 bytes to secondary GFM file: /home/mschedl/Working-CASE-RNA/histat//cvirginica_hisat_edited.6.ht2
+Re-opening _in5 and _in5 as input streams
+Returning from HierEbwt constructor
+Headers:
+    len: 684675328
+    gbwtLen: 684675329
+    nodes: 684675329
+    sz: 171168832
+    gbwtSz: 171168833
+    lineRate: 6
+    offRate: 4
+    offMask: 0xfffffff0
+    ftabChars: 10
+    eftabLen: 0
+    eftabSz: 0
+    ftabLen: 1048577
+    ftabSz: 4194308
+    offsLen: 42792209
+    offsSz: 171168836
+    lineSz: 64
+    sideSz: 64
+    sideGbwtSz: 48
+    sideGbwtLen: 192
+    numSides: 3566018
+    numLines: 3566018
+    gbwtTotLen: 228225152
+    gbwtTotSz: 228225152
+    reverse: 0
+    linearFM: Yes
+Total time for call to driver() for forward index: 00:14:56
+20231777 reads; of these:
+  20231777 (100.00%) were paired; of these:
+    4527888 (22.38%) aligned concordantly 0 times
+    14217121 (70.27%) aligned concordantly exactly 1 time
+    1486768 (7.35%) aligned concordantly >1 times
+    ----
+    4527888 pairs aligned concordantly 0 times; of these:
+      81508 (1.80%) aligned discordantly 1 time
+    ----
+    4446380 pairs aligned 0 times concordantly or discordantly; of these:
+      8892760 mates make up the pairs; of these:
+        7150689 (80.41%) aligned 0 times
+        1542612 (17.35%) aligned exactly 1 time
+        199459 (2.24%) aligned >1 times
+82.33% overall alignment rate
+[bam_sort_core] merging from 18 files and 1 in-memory blocks...
+/home/mschedl/Working-CASE-RNA/histat//CA_J06.F.trim.fq.gz_bam
+HISAT2 PE /home/mschedl/Working-CASE-RNA/histat//CA_J06.F.trim.fq.gz Wed May 8 16:02:00 EDT 2019
+21536257 reads; of these:
+  21536257 (100.00%) were paired; of these:
+    4769185 (22.14%) aligned concordantly 0 times
+    13675568 (63.50%) aligned concordantly exactly 1 time
+    3091504 (14.35%) aligned concordantly >1 times
+    ----
+    4769185 pairs aligned concordantly 0 times; of these:
+      88606 (1.86%) aligned discordantly 1 time
+    ----
+    4680579 pairs aligned 0 times concordantly or discordantly; of these:
+      9361158 mates make up the pairs; of these:
+        7474791 (79.85%) aligned 0 times
+        1589811 (16.98%) aligned exactly 1 time
+        296556 (3.17%) aligned >1 times
+82.65% overall alignment rate
+[bam_sort_core] merging from 23 files and 1 in-memory blocks...
+/home/mschedl/Working-CASE-RNA/histat//CA_J08.F.trim.fq.gz_bam
+HISAT2 PE /home/mschedl/Working-CASE-RNA/histat//CA_J08.F.trim.fq.gz Wed May 8 17:03:12 EDT 2019
+25383921 reads; of these:
+  25383921 (100.00%) were paired; of these:
+    5350779 (21.08%) aligned concordantly 0 times
+    16065098 (63.29%) aligned concordantly exactly 1 time
+    3968044 (15.63%) aligned concordantly >1 times
+    ----
+    5350779 pairs aligned concordantly 0 times; of these:
+      77780 (1.45%) aligned discordantly 1 time
+    ----
+    5272999 pairs aligned 0 times concordantly or discordantly; of these:
+      10545998 mates make up the pairs; of these:
+        8794439 (83.39%) aligned 0 times
+        1557161 (14.77%) aligned exactly 1 time
+        194398 (1.84%) aligned >1 times
+82.68% overall alignment rate
+[bam_sort_core] merging from 28 files and 1 in-memory blocks...
+/home/mschedl/Working-CASE-RNA/histat//CA_J11.F.trim.fq.gz_bam
+HISAT2 PE /home/mschedl/Working-CASE-RNA/histat//CA_J11.F.trim.fq.gz Wed May 8 18:14:21 EDT 2019
+36997630 reads; of these:
+  36997630 (100.00%) were paired; of these:
+    7454172 (20.15%) aligned concordantly 0 times
+    21880738 (59.14%) aligned concordantly exactly 1 time
+    7662720 (20.71%) aligned concordantly >1 times
+    ----
+    7454172 pairs aligned concordantly 0 times; of these:
+      111082 (1.49%) aligned discordantly 1 time
+    ----
+    7343090 pairs aligned 0 times concordantly or discordantly; of these:
+      14686180 mates make up the pairs; of these:
+        12018366 (81.83%) aligned 0 times
+        2332399 (15.88%) aligned exactly 1 time
+        335415 (2.28%) aligned >1 times
+83.76% overall alignment rate
+[bam_sort_core] merging from 46 files and 1 in-memory blocks...

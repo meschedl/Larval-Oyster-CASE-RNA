@@ -1,0 +1,30 @@
+# gffcompare v0.11.2 | Command line was:
+#gffcompare -r ref_C_virginica-3.0_top_level.gff3 -G -o c_vir_merged_compare_No_A C_Vir_ST_merged_NO_A_test.gtf
+#
+
+#= Summary for dataset: C_Vir_ST_merged_NO_A_test.gtf 
+#     Query mRNAs :  108646 in   45439 loci  (100665 multi-exon transcripts)
+#            (16934 multi-transcript loci, ~2.4 transcripts per locus)
+# Reference mRNAs :   67853 in   39152 loci  (65384 multi-exon)
+# Super-loci w/ reference transcripts:    37492
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    88.9    |
+        Exon level:   100.0     |    85.8    |
+      Intron level:    99.9     |    90.5    |
+Intron chain level:   100.0     |    65.0    |
+  Transcript level:   100.0     |    62.5    |
+       Locus level:   100.0     |    82.5    |
+
+     Matching intron chains:   65384
+       Matching transcripts:   67853
+              Matching loci:   39152
+
+          Missed exons:       0/352731	(  0.0%)
+           Novel exons:   27597/425154	(  6.5%)
+        Missed introns:     258/310704	(  0.1%)
+         Novel introns:   10444/342908	(  3.0%)
+           Missed loci:       0/39152	(  0.0%)
+            Novel loci:    7947/45439	( 17.5%)
+
+ Total union super-loci across all input datasets: 45439 
+108646 out of 108646 consensus transcripts written in c_vir_merged_compare_No_A.annotated.gtf (0 discarded as redundant)
