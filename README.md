@@ -1,4 +1,4 @@
-# RNASeq Analysis for Coastal Acidification, Sewage Effluent, and Multiple Stressors on Eastern Oyster Larvae -- [The Puritz Lab of Marine Evolutionary Ecology](http://www.marineevoeco.com/)
+## RNASeq Analysis for Coastal Acidification, Sewage Effluent, and Multiple Stressors on Eastern Oyster Larvae -- [The Puritz Lab of Marine Evolutionary Ecology](http://www.marineevoeco.com/)
 
 **The Rational Behind Studying Multiple Stressors**  
 
@@ -49,4 +49,11 @@ The larvae were then filtered out of their experimental bottles and flash frozen
 - Outputs from those programs are in the [outputs](https://github.com/meschedl/Larval-Oyster-CASE-RNA/tree/master/outputs) folder.  
 - StringTie output file conversion into gene count matrixes for DESeq2 is with [prepDE.py](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/scripts/prepDE.py), this script is from [here](https://github.com/gpertea/stringtie/blob/master/prepDE.py).
 - Differential expression analysis is in the [DESeq2_CASE_RNA.md](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/DESeq2_CASE_RNA.md) along with all code for making figures.   
-- Preparation of p-values for GO_MWU is in the [Signed-Neg-Log-Pvalue.R](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/scripts/Signed-Neg-Log-Pvalue.R) script. 
+- Preparation of p-values for GO_MWU is in the [Signed-Neg-Log-Pvalue.R](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/scripts/Signed-Neg-Log-Pvalue.R) script.
+- Preparation of results files and GO terms with the [GO_MWU_Prep.md](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/scripts/GO_MWU_Prep.md) markdown.
+- Other scripts for GO_MWU are also in the [scripts](https://github.com/meschedl/Larval-Oyster-CASE-RNA/tree/master/scripts) folder, and are available from the source [here](https://github.com/z0on/GO_MWU)
+- [GO_MWR.R](https://github.com/meschedl/Larval-Oyster-CASE-RNA/blob/master/scripts/GO_MWU.R) including the files from this analysis.
+
+**Poster from the Evolution Meeting 2019**
+
+![poster](images/MESEvoPoster2019.jpg)
