@@ -1,16 +1,7 @@
 
-# CASE RNASeq Analysis  
+# CASE RNASeq Analysis : QC, Read Trimming, Read Alignment, and Transcript Assembly
 
 **Author: Maggie Schedl**
-
-Steps of Analysis:
-- Looking at read counts
-- QC, visualization, and trimming of reads  
-- Using [HISAT2](https://ccb.jhu.edu/software/hisat2/index.shtml) to align reads to the Eastern Oyster genome
-- Using [StringTie](https://ccb.jhu.edu/software/stringtie/index.shtml) to assemble alignments to transcripts with the Eastern Oyster annotation file
-- Converting [StringTie](https://ccb.jhu.edu/software/stringtie/index.shtml) output into a transcript count matrix for [DESeq2](http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#contrasts)
-- Using [DESeq2](http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#contrasts) to visualize data and look at log2 fold changes in expression levels between the treatments and control
-- Rank-based Gene Ontology analysis of gene expression data with [GO_MWU](https://github.com/z0on/GO_MWU)  
 
 _All analysis was done on our lab shared server, KITT, made by [J. Puritz](https://github.com/jpuritz)_  
 
