@@ -145,3 +145,4 @@ awk '/LOC*/' GYMODSLOCuniq3 > GYMODSLOConly
  ```
  cut -f9 GYMODS | sed -e 's/;/  /g' | cut -f4 | sed -e 's/ /  /g' | cut -f3 | uniq | sed -e 's/"//g' | sed '/^$/d' | awk '/LOC*/' > LOCSONLY
  ```
+![meme](images/the_limit.jpg)
