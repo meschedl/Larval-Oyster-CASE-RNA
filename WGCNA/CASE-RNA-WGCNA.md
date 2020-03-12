@@ -1186,7 +1186,7 @@ par(cex = 1.0)
 plotEigengeneNetworks(MET, "Eigengene adjacency heatmap", marHeatmap = c(3,4,2,2),
 plotDendrograms = FALSE, xLabelsAngle = 90)
 ```
-![dendro](/images/vst-eigen-dendro-ef.png)
+![dendro](/images/vst-eigen-dendo-ef.png)
 ![hmap](/images/vst-eigen-hmap-ef.png)
 
 Ok so there are some groupings. They don't really go with the effluent treatment except for greenyellow
