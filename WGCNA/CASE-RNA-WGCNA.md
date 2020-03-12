@@ -1108,7 +1108,7 @@ cex.text = 0.5,
 zlim = c(-1,1),
 main = paste("Module-trait relationships"))
 ```
-![cor](/imgages/vst-cor.png)
+![cor](/images/vst-cor.png)
 
 Ok, with this type of transformed data, the greenyellow module is highly negatively correlated with effluent treatment. Magenta is negatively correlated with pCO2 treatment (is that a 0.05 or 0.06?). And module purple is positively correlated with effluent treatment.
 
