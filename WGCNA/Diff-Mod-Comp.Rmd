@@ -1,0 +1,209 @@
+---
+title: "Diff-Mod-Comp"
+author: "Maggie Schedl"
+date: "3/23/2020"
+output: github_document
+---
+
+
+# Setup
+```{r}
+getwd()
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(genefilter)
+
+```
+
+
+```{r}
+#First read in the two lists
+GYGenes <- read.csv("GYModGeneNames.csv")
+SigSE <- read.table("ordered_sig_SE.txt")
+SigCASE <- read.table("ordered_sig_CASE.txt")
+```
+
+Ok they are not in the right format yet to be made into a venn diagram. 
+I need them as... lists I think
+```{r}
+SElist <- rownames(SigSE)
+CASElist <- rownames(SigCASE)
+GYgenes <- GYGenes$GYGeneNames
+
+GYgenes
+CASElist
+```
+
+```{r}
+# combine the three lists together
+
+CombSECASEGY <- c(SElist, CASElist, GYgenes) 
+CombSECASEGY
+#I think this removes duplicates 
+UCombSECASEGY <- unique(CombSECASEGY)
+UCombSECASEGY
+```
+
+
+```{r}
+#now compare each individual list to the combined list, which is why you want the duplicates removed
+
+# Comparing each individual list with the combined list
+SE_overlap <- UCombSECASEGY %in% SElist
+GY_Overlap <- UCombSECASEGY %in% GYgenes 
+CASE_overlap <- UCombSECASEGY %in% GYgenes
+
+```
+
+```{r}
+# Generating venn counts to plot venn diagram
+Overlap1 <- cbind(SE_overlap, GY_Overlap, CASE_overlap)
+Ven1 <- vennCounts(Overlap1)
+vennDiagram(Ven1, cex = 1,names = c("SE", "GY", "CASE"), circle.col = c("#2e5eaa", "#593959", "#40a08e"))
+
+```
+I'm not sure if this is right. 
+
+https://www.r-graph-gallery.com/14-venn-diagramm.html
+
+https://www.data-to-viz.com/story/SeveralIndepLists.html
+
+```{r}
+library(VennDiagram)
+library(scales)
+```
+
+```{r}
+# Chart
+venn.diagram(
+  x = list(SElist, GYgenes, CASElist),
+  category.names = c("SE" , "GY " , "CASE"),
+   filename = 'Test-venn.png',
+  output = TRUE ,
+          imagetype="png" ,
+          height = 480 , 
+          width = 480 , 
+          resolution = 300,
+          compression = "lzw",
+          lwd = 1,
+          col=c("#440154ff", '#21908dff', '#fde725ff'),
+          fill = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3), alpha('#fde725ff',0.3)),
+          cex = 0.5,
+          fontfamily = "sans",
+          cat.cex = 0.6,
+          cat.default.pos = "outer",
+          cat.pos = c(-27, 27, 135),
+          cat.dist = c(0.055, 0.055, 0.085),
+          cat.fontfamily = "sans",
+          cat.col = c("#440154ff", '#21908dff', '#fde725ff'),
+          rotation = 1
+        )
+
+
+
+
+```
+This looks a little weird, it's like it's missing an overlap...
+
+How can I see what those actual genes are?
+https://www.biostars.org/p/163635/
+
+```{r}
+
+shared_SE_GY <- intersect(SElist, GYgenes)
+shared_SE_GY
+
+shared_CASE_GY <- intersect(CASElist, GYgenes)
+shared_CASE_GY
+
+shared_CASE_SE <- intersect(CASElist, SElist)
+shared_CASE_SE
+
+intersect <- intersect(shared_CASE_GY, shared_SE_GY)
+intersect
+
+write.table(intersect,"GYSECASEoverlap.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+# ok this means that there are no shared genes between SE and GY that aren't shared between CASE and GY 
+```
+
+It's only 14, should I BLAST these? ¯\_(ツ)_/¯
+
+
+
+Can I do just 2?
+
+```{r}
+venn.diagram(
+  x = list(SElist, GYgenes),
+  category.names = c("SE" , "GY "),
+   filename = 'SE-GY-venn.png',
+  output = TRUE ,
+          imagetype="png" ,
+          height = 480 , 
+          width = 480 , 
+          resolution = 300,
+          compression = "lzw",
+          lwd = 1,
+          col=c("#440154ff", '#21908dff'),
+          fill = c(alpha("#440154ff",0.3), alpha('#21908dff',0.3)),
+          cex = 0.5,
+          fontfamily = "sans",
+          cat.cex = 0.6,
+          cat.default.pos = "outer",
+          cat.pos = c(-27, 27),
+          cat.dist = c(0.055, 0.055),
+          cat.fontfamily = "sans",
+          cat.col = c("#440154ff", '#21908dff'),
+          rotation = 1
+        )
+```
+
+no I cannot
+
+
+
+
+
+Can I compare with Up regulated DEGs from SE and CASE?
+
+```{r}
+
+Up_Sig_SE <- read.table("Up_Sig_SE.txt")
+Up_Sig_CASE <- read.table("Up_Sig_CASE.txt")
+GYGenes <- read.csv("GYModGeneNames.csv")
+
+Up_SElist <- rownames(Up_Sig_SE)
+Up_CASElist <- rownames(Up_Sig_CASE)
+GYgenes <- GYGenes$GYGeneNames
+
+GYgenes
+
+Up_SE_CASE_GY <- c(Up_SElist, Up_CASElist, GYgenes) 
+
+#it's just the names, I can still use this method that works 
+Up_SE_CASE_GY_list <- CASE_deseq_Matrix_Factors[which(rownames(CASE_deseq_Matrix_Factors) %in% Up_SE_CASE_GY),] #gets rid of any duplicates
+
+
+#but using from the matrix, it has all the other information again we don't need
+Up_SE_CASE_GY_uniq <- row.names(Up_SE_CASE_GY_list) #make just the names of the genes again
+
+# Comparing each individual list with the combined list
+# What are the ones in CA that are in the total? Gives back a list of true and falses 
+Up_SElist.2 <- Up_SE_CASE_GY_uniq %in% Up_SElist
+Up_CASElist.2 <- Up_SE_CASE_GY_uniq %in% Up_CASElist
+GYgenes.2 <- Up_SE_CASE_GY_uniq %in% GYgenes
+
+GYgenes.2
+
+# Generating venn counts to plot venn diagram  
+UP_SE_CASE_GYcomb <- cbind(Up_SElist.2, Up_CASElist.2, GYgenes.2)
+D_SE_CASE_GY_venn <- vennCounts(UP_SE_CASE_GYcomb)
+vennDiagram(DRvenn, cex = 1,names = c("SE", "CASE", "GY"), circle.col = c("#593959", "#2e5eaa", "#40a08e"))
+
+
+```
+
+uhhhh why is this so wrong. There are only 57 genes in the GY module?????

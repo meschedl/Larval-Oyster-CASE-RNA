@@ -1,0 +1,129 @@
+---
+title: "up_down_vis"
+author: "Maggie Schedl"
+date: "3/31/2020"
+output: html_document
+---
+
+
+
+should split up original ven diagram by up and down regulated 
+
+visualizing up and down regulated 
+
+CA # 142 up, 349 down
+SE # 142 up, 237 down
+CASE # 162 up, 433 down
+
+How do I separate out who those are? hmm maybe LF change is neg
+in my ordered list 
+
+```{r}
+getwd()
+```
+
+are these the files I want?
+```{r}
+CASE_SIG <- read.delim("ordered_sig_CASE.txt")
+SE_SIG <- read.delim("ordered_sig_CA.txt")
+CA_SIG <- read.delim("ordered_sig_SE.txt")
+```
+
+running from DESeq R script for the results files actually, these I want because I can do the subset function on them 
+```{r}
+sig_CA <- subset(results_CA_F, padj<0.05) #identify signficant pvalues with 5%FDR
+sig_SE <- subset(results_SE_F, padj<0.05)
+sig_CASE <- subset(results_CASE_F, padj<0.05)
+
+# These are formal class DESeq resuts which I want
+
+Up_Sig_SE <- subset(sig_SE, log2FoldChange>0)
+Down_Sig_SE <- subset(sig_SE, log2FoldChange<0)
+Up_Sig_CA <- subset(sig_CA, log2FoldChange>0)
+Down_Sig_CA <- subset(sig_CA, log2FoldChange<0)
+Up_Sig_CASE <- subset(sig_CASE, log2FoldChange>0)
+Down_Sig_CASE <- subset(sig_CASE, log2FoldChange<0)
+
+
+write.table(Up_Sig_SE,"Up_Sig_SE.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+write.table(Down_Sig_SE,"Down_Sig_SE.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+write.table(Up_Sig_CA,"Up_Sig_CA.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+write.table(Down_Sig_CA ,"Down_Sig_CA .txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+write.table(Up_Sig_CASE,"Up_Sig_CASE.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+write.table(Down_Sig_CASE,"Down_Sig_CASE.txt",quote=FALSE,col.names=TRUE,row.names=TRUE,sep="\t")
+```
+
+
+Then work on the venn diagrams
+
+Down Regulated 
+```{r}
+DSE_genes <- row.names(Down_Sig_SE) #just gets the names of the genes, which is all that is needed to compare
+DCA_genes <- row.names(Down_Sig_CA)
+DCASE_genes <- row.names(Down_Sig_CASE)
+
+DownRegulatedSigGenes <- c(DSE_genes, DCA_genes, DCASE_genes) #combine the list
+
+DRSG_uniq_list <- CASE_deseq_Matrix_Factors[which(rownames(CASE_deseq_Matrix_Factors) %in% DownRegulatedSigGenes),] #gets rid of any duplicates 
+
+#but using from the matrix, it has all the other information again we don't need
+DRSG_uniq <- row.names(DRSG_uniq_list) #make just the names of the genes again
+
+# Comparing each individual list with the combined list
+# What are the ones in CA that are in the total? Gives back a list of true and falses 
+DSE_genes.2 <- DRSG_uniq %in% DSE_genes
+DCA_genes.2 <- DRSG_uniq %in% DCA_genes
+DCASE_genes.2 <- DRSG_uniq %in% DCASE_genes
+
+
+# Generating venn counts to plot venn diagram  
+DRcomb <- cbind(DSE_genes.2, DCA_genes.2, DCASE_genes.2)
+DRvenn <- vennCounts(DRcomb)
+vennDiagram(DRvenn, cex = 1,names = c("SE", "CA", "CASE"), circle.col = c("#593959", "#2e5eaa", "#40a08e"))
+```
+
+Up Regulated 
+
+```{r}
+USE_genes <- row.names(Up_Sig_SE) #just gets the names of the genes, which is all that is needed to compare
+UCA_genes <- row.names(Up_Sig_CA)
+UCASE_genes <- row.names(Up_Sig_CASE)
+
+UpRegulatedSigGenes <- c(USE_genes, UCA_genes, UCASE_genes) #combine the list
+
+URSG_uniq_list <- CASE_deseq_Matrix_Factors[which(rownames(CASE_deseq_Matrix_Factors) %in% UpRegulatedSigGenes),] #gets rid of any duplicates 
+
+#but using from the matrix, it has all the other information again we don't need
+URSG_uniq <- row.names(URSG_uniq_list) #make just the names of the genes again
+URSG_uniq
+# Comparing each individual list with the combined list
+# What are the ones in CA that are in the total? Gives back a list of true and falses 
+USE_genes.2 <- URSG_uniq %in% USE_genes
+UCA_genes.2 <- URSG_uniq %in% UCA_genes
+UCASE_genes.2 <- URSG_uniq %in% UCASE_genes
+
+
+# Generating venn counts to plot venn diagram  
+URcomb <- cbind(USE_genes.2, UCA_genes.2, UCASE_genes.2)
+URvenn <- vennCounts(URcomb)
+vennDiagram(URvenn, cex = 1,names = c("SE", "CA", "CASE"), circle.col = c("#593959", "#2e5eaa", "#40a08e"))
+```
+
+probably separate lists of these overlaping ones will be helpful
+
+Down Reg shared
+```{r}
+DSE_CA_Overlap <- intersect(DSE_genes, DCA_genes)
+DSE_CASE_Overlap <- intersect(DSE_genes, DCASE_genes)
+DCA_CASE_Overlap <- intersect(DCASE_genes, DCA_genes)
+```
+
+
+Up Reg Shared
+```{r}
+USE_CA_Overlap <- intersect(USE_genes, UCA_genes)
+USE_CASE_Overlap <- intersect(USE_genes, UCASE_genes)
+UCA_CASE_Overlap <- intersect(UCASE_genes, UCA_genes)
+
+```
+
