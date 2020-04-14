@@ -1,0 +1,296 @@
+---
+title: "CASE-DESeq2-2"
+author: "Maggie Schedl"
+date: "4/13/2020"
+output: github_document
+---
+
+```{r, results="hide"}
+library(DESeq2)
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(apeglm)
+library(ggplot2)
+library(vsn)
+library(pheatmap)
+library(RColorBrewer)
+library(genefilter)
+library(rsconnect)
+library(gplots)
+library(ashr)
+library(limma)
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+
+#DIFFERENT SAMPLE INFO
+Sample_info <- read.csv("sample_info.csv", header=TRUE, sep=",")
+print(Sample_info)
+
+#load in the transcript counts file, and set the row names as the transcript ID
+CASE_GeneCountData <- as.data.frame(read.csv("gene_count_matrix.csv", row.names="gene_id"))
+head(CASE_GeneCountData,10)
+
+###filtering values for PoverA
+#set filter values for PoverA, P percent of the samples have counts over A
+filt <- filterfun(pOverA(0.214,5))
+
+#create filter for the counts data
+tfil <- genefilter(CASE_GeneCountData, filt)
+
+#identify transcripts to keep by count filter
+keep <- CASE_GeneCountData[tfil,]
+
+#identify transcript list
+gn.keep <- rownames(keep)
+
+#data filtered in PoverA, P percent of the samples have counts over A
+CASE_GeneCountData_Filt <- as.data.frame(CASE_GeneCountData[which(rownames(CASE_GeneCountData) %in% gn.keep),])
+#write.csv(counts.5x, file="filtered_counts.csv")
+head(CASE_GeneCountData_Filt,10)
+
+```
+
+
+
+
+```{r}
+rownames(Sample_info) <- Sample_info$sample
+colnames(CASE_GeneCountData_Filt) <- Sample_info$sample
+head(Sample_info)
+head(CASE_GeneCountData_Filt)
+
+
+#The row and column names for the two data frames need to be exactly the same for the rest of the analysis, so it is good to check
+all(rownames(Sample_info) %in% colnames(CASE_GeneCountData_Filt))  #Should return TRUE
+
+all(rownames(Sample_info) == colnames(CASE_GeneCountData_Filt))    # should return TRUE
+```
+
+```{r}
+
+
+# Sample_info$group <- factor(paste0(Sample_info$effluent, Sample_info$pCO2)) #merge condition and time into group
+
+Sample_info$effluent = factor(x = Sample_info$effluent,levels = c('ambient','high'))
+Sample_info$pCO2 = factor(x = Sample_info$pCO2,levels = c('ambient','high'))
+
+#Make matrix, there are multiple ways to make the matrix, but because I already start from a matrix I used DESeqDataSetFromMatrix
+CASE_deseq_Matrix <- DESeqDataSetFromMatrix(countData = CASE_GeneCountData_Filt,
+                              colData = Sample_info,
+                              design = ~ effluent + pCO2 + effluent:pCO2 ) # column name of the treatment information as teh design 
+CASE_deseq_Matrix
+
+#extra filtering of low counts?
+keep <- rowSums(counts(CASE_deseq_Matrix)) >= 10
+CASE_deseq_Matrix <- CASE_deseq_Matrix[keep,]
+
+CASE_deseq_Matrix # not any different
+```
+
+```{r}
+
+CASE_dds_2 <- DESeq(CASE_deseq_Matrix)
+resultsNames(CASE_dds_2)
+```
+
+
+```{r}
+
+full_results <- results(CASE_dds_2, alpha=0.1)
+effluent_ambient <- results(CASE_dds_2, alpha=0.1, name = "effluent_high_vs_ambient")
+pCO2_ambient <- results(CASE_dds_2, alpha=0.1, name = "pCO2_high_vs_ambient")
+effluent_pCO2_interact <- results(CASE_dds_2, alpha=0.1, name = "effluenthigh.pCO2high")
+```
+
+
+```{r}
+summary(full_results)
+
+summary(effluent_ambient)
+summary(pCO2_ambient)
+summary(effluent_pCO2_interact)
+```
+what do those low counts mean? 
+
+what if independent filtering is off?
+
+```{r}
+full_results <- results(CASE_dds_2, alpha=0.1)
+effluent_ambient2 <- results(CASE_dds_2, alpha=0.1, independentFiltering = FALSE, name = "effluent_high_vs_ambient")
+pCO2_ambient2 <- results(CASE_dds_2, alpha=0.1, independentFiltering = FALSE, name = "pCO2_high_vs_ambient")
+effluent_pCO2_interact2 <- results(CASE_dds_2, alpha=0.1, independentFiltering = FALSE, name = "effluenthigh.pCO2high")
+
+summary(effluent_ambient2)
+summary(pCO2_ambient2)
+summary(effluent_pCO2_interact2)
+
+
+```
+
+
+
+
+
+
+
+```{r}
+sig_effluent <- subset(effluent_ambient, padj<0.1) #identify signficant pvalues 
+sig_pCO2 <- subset(pCO2_ambient, padj<0.1)
+sig_interact <- subset(effluent_pCO2_interact, padj<0.1)
+
+#combine all DEGs
+combine <- rbind(sig_effluent, sig_pCO2, sig_interact)
+combine_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(combine)),] #combined list from the original matrix so dupicates are removed 
+combine_rlog <- rlog(combine_list, blind=FALSE)
+
+
+
+```
+
+```{r}
+plotPCA(combine_rlog, intgroup=c("effluent", "pCO2")) # same PCA as below but less pretty, use this for knowing the PC loadings for the labels in the below PCA
+
+pcaData <- plotPCA(combine_rlog, intgroup=c("effluent", "pCO2"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=effluent:pCO2)) +
+  geom_point(size=3) +
+  coord_fixed() + ylab("PC2: 16% Variance Explained") +
+  xlab("PC1: 34% Variance Explained") +
+  theme_linedraw() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))
+```
+this is really nice clustering 
+
+
+```{r}
+sig.num <- sum(combine$padj <0.1, na.rm=T) 
+topVarGenes <- head(order(rowVars(assay(combine_rlog)),decreasing=TRUE),sig.num) #sort by decreasing sig
+mat <- assay(combine_rlog)[ topVarGenes, ] #make an expression object
+mat <- mat - rowMeans(mat) #difference in expression compared to average across all samples
+col.order <- c("CASE_J03", "CASE_J09", "CASE_J12", "CASE_J13", "CA_J06",   "CA_J08",   "CA_J11",   "CA_J18",   "CON_J02",  "CON_J05" , "CON_J10" , "SE_J01" ,  "SE_J04",   "SE_J07")
+mat <- mat[,col.order]
+df1 <- as.data.frame(colData(combine_rlog)[c("effluent", "pCO2")]) #make dataframe for column naming 
+
+
+colfunc <- colorRampPalette(c("deepskyblue", "white", "violetred3")) #make function for the color gradient 
+ann_colors <- list(effluent = c(ambient="blue", high="red"), pCO2 = c(ambient= "gray", high= "black"))
+breakss <- c(-2, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1, -.9, -.8, -.7, -.6, -.5, -.4, -.3, -.2, -.1, 0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2) #this looks very extra but this is how the colors in the heatmap were broken up 
+pheatmap(mat, annotation_col=df1, annotation_colors=ann_colors, clustering_method = "average", 
+         clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=T,
+         show_colnames =F, breaks= breakss, color = colfunc(40)) 
+```
+These actually cluster out by treatment?!?! 
+
+
+
+
+
+```{r}
+sig_effluen_num <- sum(effluent_ambient$padj <0.1, na.rm=T) #I don't know why you need this
+ef_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(effluent_ambient)),]
+r_ef_list <- rlog(ef_list, blind = FALSE)
+topVarGenes <- head(order(rowVars(assay(r_ef_list)),decreasing=TRUE),sig_effluen_num) #can choose a subset of transcripts for viewing
+mat <- assay(r_ef_list)[ topVarGenes, ] #make an expression object
+mat <- mat - rowMeans(mat) #difference in expression compared to average across all samples
+col.order <- c("CASE_J03", "CASE_J09", "CASE_J12", "CASE_J13", "CA_J06",   "CA_J08",   "CA_J11",   "CA_J18",   "CON_J02",  "CON_J05" , "CON_J10" , "SE_J01" ,  "SE_J04",   "SE_J07")
+mat <- mat[,col.order]
+df <- as.data.frame(colData(r_ef_list)[,c("effluent", "pCO2")]) #make dataframe
+colfunc <- colorRampPalette(c("deepskyblue", "white", "violetred3")) #make function for the color gradient 
+ann_colors <- list(effluent = c(ambient="blue", high="red"), pCO2 = c(ambient= "gray", high= "black"))
+breakss <- c(-2, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1, -.9, -.8, -.7, -.6, -.5, -.4, -.3, -.2, -.1, 0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2) #this looks very extra but this is how the colors in the heatmap were broken up 
+pheatmap(mat, annotation_col=df1, annotation_colors=ann_colors, clustering_method = "average", 
+         clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=T,
+         show_colnames =F, breaks= breakss, color = colfunc(40)) 
+
+```
+these don't. why?? 
+
+
+Well, this is still right
+```{r}
+#Shared MSTRG.20077 both very significantly upregulated in CASE and SE, gene21544, translates to steroid 17-alpha-hydroxylase/17,20 lyase-like (LOC111135334)
+
+plotCounts(CASE_dds_2,"MSTRG.20077", intgroup=c("effluent", "pCO2"))
+
+MSTRG_20077 <- plotCounts(CASE_dds_2,"MSTRG.20077", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+ggplot(MSTRG_20077, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + ylab("Normalized Counts") + xlab("Treatment") + ggtitle("steroid 17-alpha-hydroxylase/17,20 lyase-like (LOC111135334)") + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+```
+
+
+
+```{r}
+sigpCO2genes <- row.names(sig_pCO2) #just gets the names of the genes, which is all that is needed to compare
+siginteract_genes <- row.names(sig_interact)
+sigeff_genes <- row.names(sig_effluent)
+
+comb3 <- c(sigpCO2genes, siginteract_genes, sigeff_genes) #combine the list
+
+comb3_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% comb3),] #gets rid of any duplicates 
+
+comb3_row <- row.names(comb3_list) #make just the names of the genes again
+
+# Comparing each individual list with the combined list
+sigpCO2_genes.2 <- comb3_row %in% sigpCO2genes
+siginteract_genes.2 <- comb3_row %in% siginteract_genes 
+sigeff_genes.2 <- comb3_row %in% sigeff_genes
+
+
+# Generating venn counts to plot venn diagram
+counts3 <- cbind(sigpCO2_genes.2, sigeff_genes.2, siginteract_genes.2)
+ven3 <- vennCounts(counts3)
+vennDiagram(ven3, cex = 1,names = c("pCO2", "effluent", "interaction"), circle.col = c("#2e5eaa", "#593959", "#40a08e"))
+```
+
+
+```{r}
+metadata(effluent_pCO2_interact)$alpha
+
+metadata(effluent_pCO2_interact)$filterThreshold
+
+plot(metadata(effluent_pCO2_interact)$filterNumRej, 
+     type="b", ylab="number of rejections",
+     xlab="quantiles of filter")
+lines(metadata(effluent_pCO2_interact)$lo.fit, col="red")
+abline(v=metadata(effluent_pCO2_interact)$filterTheta)
+```
+
+
+```{r}
+W <- effluent_pCO2_interact$stat
+maxCooks <- apply(assays(CASE_dds_2)[["cooks"]],1,max)
+idx <- !is.na(W)
+plot(rank(W[idx]), maxCooks[idx], xlab="rank of Wald statistic", 
+     ylab="maximum Cook's distance per gene",
+     ylim=c(0,5), cex=.4, col=rgb(0,0,0,.3))
+m <- ncol(CASE_dds_2)
+p <- 3
+abline(h=qf(.99, p, m - p))
+```
+
+
+```{r}
+rlog <- rlog(CASE_dds_2, blind = FALSE)
+plotPCA(rlog, intgroup=c("effluent", "pCO2"))
+```
+
+
+```{r}
+vst <- vst(CASE_dds_2, blind = FALSE)
+plotPCA(vst, intgroup=c("effluent", "pCO2"))
+```
+
+
+
+
+
+
+
+
+
