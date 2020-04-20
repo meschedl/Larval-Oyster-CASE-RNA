@@ -610,9 +610,11 @@ pheatmap(mat, annotation_col=df1, annotation_colors=ann_colors, clustering_metho
 
 ![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-12-1.png) These actually cluster out by treatment?!?!
 
+Effluent Significant Heatmap
+
 ``` r
 sig_effluen_num <- sum(effluent_ambient$padj <0.1, na.rm=T) #I don't know why you need this
-ef_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(effluent_ambient)),]
+ef_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(sig_effluent)),]
 r_ef_list <- rlog(ef_list, blind = FALSE)
 topVarGenes <- head(order(rowVars(assay(r_ef_list)),decreasing=TRUE),sig_effluen_num) #can choose a subset of transcripts for viewing
 mat <- assay(r_ef_list)[ topVarGenes, ] #make an expression object
@@ -623,12 +625,56 @@ df <- as.data.frame(colData(r_ef_list)[,c("effluent", "pCO2")]) #make dataframe
 colfunc <- colorRampPalette(c("deepskyblue", "white", "violetred3")) #make function for the color gradient 
 ann_colors <- list(effluent = c(ambient="blue", high="red"), pCO2 = c(ambient= "gray", high= "black"))
 breakss <- c(-2, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1, -.9, -.8, -.7, -.6, -.5, -.4, -.3, -.2, -.1, 0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2) #this looks very extra but this is how the colors in the heatmap were broken up 
-pheatmap(mat, annotation_col=df1, annotation_colors=ann_colors, clustering_method = "average", 
+pheatmap(mat, annotation_col=df, annotation_colors=ann_colors, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=T,
          show_colnames =F, breaks= breakss, color = colfunc(40)) 
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-13-1.png) these don't. why??
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-13-1.png) This is better
+
+PCO2 Significant Heatmap
+
+``` r
+sig_pCO2_num <- sum(sig_pCO2$padj <0.1, na.rm=T) #I don't know why you need this
+co2_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(pCO2_ambient)),]
+r_co2_list <- rlog(co2_list, blind = FALSE)
+topVarGenes <- head(order(rowVars(assay(r_co2_list)),decreasing=TRUE),sig_pCO2_num) #can choose a subset of transcripts for viewing
+mat <- assay(r_co2_list)[ topVarGenes, ] #make an expression object
+mat <- mat - rowMeans(mat) #difference in expression compared to average across all samples
+col.order <- c("CASE_J03", "CASE_J09", "CASE_J12", "CASE_J13", "CA_J06",   "CA_J08",   "CA_J11",   "CA_J18",   "CON_J02",  "CON_J05" , "CON_J10" , "SE_J01" ,  "SE_J04",   "SE_J07")
+mat <- mat[,col.order]
+df <- as.data.frame(colData(r_co2_list)[,c("effluent", "pCO2")]) #make dataframe
+colfunc <- colorRampPalette(c("deepskyblue", "white", "violetred3")) #make function for the color gradient 
+ann_colors <- list(effluent = c(ambient="blue", high="red"), pCO2 = c(ambient= "gray", high= "black"))
+breakss <- c(-2, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1, -.9, -.8, -.7, -.6, -.5, -.4, -.3, -.2, -.1, 0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2) #this looks very extra but this is how the colors in the heatmap were broken up 
+pheatmap(mat, annotation_col=df, annotation_colors=ann_colors, clustering_method = "average", 
+         clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=T,
+         show_colnames =F, breaks= breakss, color = colfunc(40)) 
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-14-1.png) This one doesn't really cluster
+
+Interaction Heatmap, this will probably be wierd because it's so few genes
+
+``` r
+sig_interact_num <- sum(sig_interact$padj <0.1, na.rm=T) #I don't know why you need this
+interact_list <- CASE_deseq_Matrix[which(rownames(CASE_deseq_Matrix) %in% rownames(effluent_pCO2_interact)),]
+r_interact_list <- rlog(interact_list, blind = FALSE)
+topVarGenes <- head(order(rowVars(assay(r_interact_list)),decreasing=TRUE),sig_interact_num ) #can choose a subset of transcripts for viewing
+mat <- assay(r_interact_list)[ topVarGenes, ] #make an expression object
+mat <- mat - rowMeans(mat) #difference in expression compared to average across all samples
+col.order <- c("CASE_J03", "CASE_J09", "CASE_J12", "CASE_J13", "CA_J06",   "CA_J08",   "CA_J11",   "CA_J18",   "CON_J02",  "CON_J05" , "CON_J10" , "SE_J01" ,  "SE_J04",   "SE_J07")
+mat <- mat[,col.order]
+df <- as.data.frame(colData(r_interact_list)[,c("effluent", "pCO2")]) #make dataframe
+colfunc <- colorRampPalette(c("deepskyblue", "white", "violetred3")) #make function for the color gradient 
+ann_colors <- list(effluent = c(ambient="blue", high="red"), pCO2 = c(ambient= "gray", high= "black"))
+breakss <- c(-2, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1, -.9, -.8, -.7, -.6, -.5, -.4, -.3, -.2, -.1, 0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2) #this looks very extra but this is how the colors in the heatmap were broken up 
+pheatmap(mat, annotation_col=df, annotation_colors=ann_colors, clustering_method = "average", 
+         clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=T,
+         show_colnames =F, breaks= breakss, color = colfunc(40)) 
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 Well, this is still right
 
@@ -638,7 +684,7 @@ Well, this is still right
 plotCounts(CASE_dds_2,"MSTRG.20077", intgroup=c("effluent", "pCO2"))
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ``` r
 MSTRG_20077 <- plotCounts(CASE_dds_2,"MSTRG.20077", intgroup=c("effluent", "pCO2"), returnData=TRUE)
@@ -646,7 +692,7 @@ ggplot(MSTRG_20077, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_b
   geom_point() + ylab("Normalized Counts") + xlab("Treatment") + ggtitle("steroid 17-alpha-hydroxylase/17,20 lyase-like (LOC111135334)") + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-14-2.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-16-2.png)
 
 ``` r
 sigpCO2genes <- row.names(sig_pCO2) #just gets the names of the genes, which is all that is needed to compare
@@ -671,7 +717,147 @@ ven3 <- vennCounts(counts3)
 vennDiagram(ven3, cex = 1,names = c("pCO2", "effluent", "interaction"), circle.col = c("#2e5eaa", "#593959", "#40a08e"))
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-17-1.png)
+
+``` r
+#sigpCO2genes
+#sigeff_genes
+
+
+siginteract_genes # what do the expression levels of these genes look like?
+```
+
+    ##  [1] "MSTRG.7365"  "MSTRG.13786" "MSTRG.21653" "MSTRG.13655" "MSTRG.2339" 
+    ##  [6] "MSTRG.9902"  "MSTRG.2917"  "MSTRG.3953"  "MSTRG.978"   "MSTRG.3877" 
+    ## [11] "MSTRG.3878"  "MSTRG.8466"
+
+``` r
+MSTRG.7365 <- plotCounts(CASE_dds_2,"MSTRG.7365", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+a <- ggplot(MSTRG.7365, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.13786 <- plotCounts(CASE_dds_2,"MSTRG.13786", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+b <- ggplot(MSTRG.13786, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.21653 <- plotCounts(CASE_dds_2,"MSTRG.21653", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+c <- ggplot(MSTRG.21653, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.13655 <- plotCounts(CASE_dds_2,"MSTRG.13655", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+d <- ggplot(MSTRG.13655, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.2339 <- plotCounts(CASE_dds_2,"MSTRG.2339", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+e <- ggplot(MSTRG.2339, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.9902 <- plotCounts(CASE_dds_2,"MSTRG.9902", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+f <- ggplot(MSTRG.9902, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.2917 <- plotCounts(CASE_dds_2,"MSTRG.2917", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+g <- ggplot(MSTRG.2917, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.3953 <- plotCounts(CASE_dds_2,"MSTRG.3953", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+h <- ggplot(MSTRG.3953, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.978 <- plotCounts(CASE_dds_2,"MSTRG.978", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+i <- ggplot(MSTRG.978, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.3877 <- plotCounts(CASE_dds_2,"MSTRG.3877", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+j <- ggplot(MSTRG.3877, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.3878 <- plotCounts(CASE_dds_2,"MSTRG.3878", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+k <- ggplot(MSTRG.3878, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point() + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+
+MSTRG.8466 <- plotCounts(CASE_dds_2,"MSTRG.8466", intgroup=c("effluent", "pCO2"), returnData=TRUE)
+l <- ggplot(MSTRG.8466, aes(x=effluent:pCO2, y=count, color=effluent:pCO2)) + geom_boxplot() +
+  geom_point()  + scale_color_manual(values = c("ambient:ambient" = "#aa2faa", "ambient:high" = "#2e5aaa", "high:ambient" = "#593959", "high:high" = "#41a08e"))+ theme(legend.position = "none") + theme_minimal()
+a
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-1.png)
+
+``` r
+b
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-2.png)
+
+``` r
+c
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-3.png)
+
+``` r
+d
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-4.png)
+
+``` r
+e
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-5.png)
+
+``` r
+f
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-6.png)
+
+``` r
+g
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-7.png)
+
+``` r
+h
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-8.png)
+
+``` r
+i
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-9.png)
+
+``` r
+j
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-10.png)
+
+``` r
+k
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-11.png)
+
+``` r
+l
+```
+
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-12.png)
+
+``` r
+# library("egg")
+
+# figure <- ggarrange(a, b, c, d, e, f, g, h, i, j, k, l, 
+               #     labels = c("MSTRG.7365", "MSTRG.13786", "MSTRG.21653", "MSTRG.13655", "MSTRG.2339", "MSTRG.9902", "MSTRG.2917", "MSTRG.3953", "MSTRG.978", "MSTRG.3877", "MSTRG.3878", "MSTRG.8466"),
+               #     ncol = 4, nrow = 3)
+# figure
+```
 
 ``` r
 metadata(effluent_pCO2_interact)$alpha
@@ -694,7 +880,7 @@ lines(metadata(effluent_pCO2_interact)$lo.fit, col="red")
 abline(v=metadata(effluent_pCO2_interact)$filterTheta)
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-19-1.png)
 
 ``` r
 W <- effluent_pCO2_interact$stat
@@ -708,18 +894,18 @@ p <- 3
 abline(h=qf(.99, p, m - p))
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-20-1.png)
 
 ``` r
 rlog <- rlog(CASE_dds_2, blind = FALSE)
 plotPCA(rlog, intgroup=c("effluent", "pCO2"))
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-21-1.png)
 
 ``` r
 vst <- vst(CASE_dds_2, blind = FALSE)
 plotPCA(vst, intgroup=c("effluent", "pCO2"))
 ```
 
-![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-19-1.png)
+![](2nd-DESeq2_files/figure-markdown_github/unnamed-chunk-22-1.png)
