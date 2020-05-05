@@ -116,3 +116,11 @@ nope, same error.
 Could be that the two programs need different versions of python. or something else is wrong. But I don't know what to do if it's telling me their code is wrong.
 
 Guess I'll try to do something different.
+
+
+
+
+might need to have chromosomes labeled as 1,2,3 etc not NC_007175.2
+
+
+search and replace
