@@ -7,8 +7,6 @@ output: github_document
 
 
 
-Import the merged.annotated.gtf (map)
-
 ```{r}
 getwd()
 ```
@@ -42,8 +40,9 @@ colnames(filtered_counts) <- c("gene_id", "CASE_J03", "CASE_J09", "CASE_J12", "C
 head(filtered_counts)
 dim(filtered_counts)
 
-all_genes_expressed <- filtered_counts$gene_id
-write.table(all_genes_expressed,"all_genes_expressed.txt", row.names=FALSE, col.names = FALSE, quote = FALSE) # take into command line. need list of all expressed genes but by ref_gene_id I think 
+#don't do things in command line
+#all_genes_expressed <- filtered_counts$gene_id
+#write.table(all_genes_expressed,"all_genes_expressed.txt", row.names=FALSE, col.names = FALSE, quote = FALSE) # take into command line. need list of all expressed genes but by ref_gene_id I think 
 ```
 
 # GOOD
@@ -67,14 +66,81 @@ dim(eff_DEGlist) # 58 genes
 # GOOD 
 
 what if I used read.gtf here 
+don't think this needs to be changed
 ```{r}
 Merged_AnnotGTF <- read.gtf("c_vir_merged_compare_No_A.annotated.gtf", attr = c("split"), features = NULL, quiet = FALSE)
 head(Merged_AnnotGTF)
 dim(Merged_AnnotGTF) # 1252376 correct same as file in KITT
+
+
+# only rows that have "transcript" as the feature have a LOC## associated with them, so I have to subset this into transcripts only. I think I want to use LOC because there can be LOC entries even if there isn't a ref_gene_name, and there are LOCs in the reference annotation file. 
+# my problem might begin here though if there is a 
+
+Merged_AnnotGTF[540:610,]
+# might be hard to find multiple LOCs per gene_id just looking blindly 
+# see below for how I got this transcript
+grep("MSTRG.5660", Merged_AnnotGTF$gene_id)
+# look in bounds of this zone
+Merged_AnnotGTF[246534:246563,] 
+# transcript_id rna10391, gene_ID MSTRG.5660, gene_name LOC111121218, ref_gene_ID gene6113
+# transcript_id MSTRG.5660.1, gene_ID MSTRG.5660, gene_name LOC111119544, ref_gene_ID NA
+# transcript_id rna10395, gene_ID MSTRG.5660, gene_name LOC111119543, ref_gene_ID gene6115
+# transcript_id MSTRG.5660.4, gene_ID MSTRG.5660, gene_name LOC111119543, ref_gene_ID NA
+# transcript_id MSTRG.5660.5, gene_ID MSTRG.5660, gene_name LOC111119544, ref_gene_ID NA
+# transcript_id rna10396, gene_ID MSTRG.5660, gene_name LOC111119544, ref_gene_ID gene6116
+
+# I see multiple problems with this... 
+# These are all transcript features
+# all have the same gene_id which is the only thing I get from my counts files
+# but there are different LOC# and different ref_gene
+# and all the ref_gene ones are an rna transcript ID
+# not sure if that matters? except that's another thing I don't know if I should be using or not
+
+# I wonder how often this happens, and if 
+
+# also just looked in the filtered counts file and some things says gene### instead of MSTRG 
+# is there and gene## in the merged file for gene_id??? am I just losing all of those genes? 
+# how do I check if there is any gene in gene_id... 
+# ok I know gene35928 is expressed
+grep("gene35928", Merged_AnnotGTF$gene_id)
+# yes! it is in gene_id! tears forever
+Merged_AnnotGTF[1199673:1199677,] 
+#  ok so hopefully theyre all in there
+
+# still have my other problem though. 
+
+# thought I needed LOC because that was the only way to get to the XP in the reference
+# but I could use rna# and that would be in the parent section, maybe
+# but I still have the same problem!! because there are 3 different RNAs from the same gene_ID!! 
+
+
+
+#  cmp_ref in here but it might not be very helpful because I would have to go through all the class codes "The cmp_ref gives the closest reference transcript (where applicable), while the relationship to this reference transcripts is given by the class_code attribute."
+# https://f1000research.com/articles/9-304/v1
+
+
 Merged_AnnotGTF_transcript <- Merged_AnnotGTF %>%
   filter(feature == 'transcript')
 head(Merged_AnnotGTF_transcript)
-dim(Merged_AnnotGTF_transcript) # 108646 ok so same number as the above file 
+dim(Merged_AnnotGTF_transcript) 
+# cut out some columns I don't need
+Merged_AnnotGTF_transcript <- Merged_AnnotGTF_transcript[,c(1,4:5,9:13)] 
+head(Merged_AnnotGTF_transcript)
+# I think I want to remove mitochondrial sequences because I dont think theyre in the GO term 
+Merged_AnnotGTF_transcript_autosome <- subset(Merged_AnnotGTF_transcript, seqname!="NC_007175.2")
+head(Merged_AnnotGTF_transcript_autosome)
+Merged_AnnotGTF_transcript_autosome[1:50,] 
+# well this is interesting there is not an rna## for every MSTRG 
+grep("MSTRG.38", Merged_AnnotGTF_transcript_autosome$gene_id)
+# ok a lot of them but I think that's because they are just adding on numbers after 38. but there is only one MSTRG.38 line, no rna# for it
+# but it has a LOC #  LOC111109452 and if you look for it in the reference
+# grep -w LOC111109452 ref_C_virginica-3.0_top_level.gff3 it has coding sequences with XPs  XP_022301276.1 
+# if I only went by RNAs then I would miss that one
+Merged_AnnotGTF_transcript_autosome[468:477,] 
+# looks like useing rna## wouldn't work because there are certain gene_id that don't have a transcript_id with an rna# but they do have a gene_name
+# so I do have to use LOC there isn't anything else I can use I think
+
+# which does not get rid of my problem where I have multiple LOC for one gene_id, don't know which one is the one expressed. But I think i have run out of other things I can use
 ```
 
 # GOOD
@@ -82,34 +148,114 @@ use filter to get the merged transcript version of the eff DEGs
 use the read.gtf version
 pretty sure gene_id and gene_id match so that's how they should come together
 ```{r}
-Merged_Eff_DEGS <- filter(Merged_AnnotGTF_transcript, gene_id%in%eff_DEGlist$gene_id)
+# the only thing that matches between these two lists/files is the gene_id or collapsed MSTRG string (sometimes says gene###)
+
+Merged_Eff_DEGS <- filter(Merged_AnnotGTF_transcript_autosome, gene_id%in%eff_DEGlist$gene_id) #MAKE SURE TO USE AUTOSOMES
 head(Merged_Eff_DEGS)
 dim(Merged_Eff_DEGS) # 124 genes
-# but some of these are duplicated because of multiple transcripts
-Merged_Eff_DEGS_U <- Merged_Eff_DEGS[!duplicated(Merged_Eff_DEGS$gene_id), ] # no duplicated gene_id entries
+# this is more than the number of DEGs (58) because there are multiple gene_names, ref_gene_ids and transcript_ids for a gene_id
+
+
+# wait, potentially this problem could be alieviated if I used the transcript_count_matrix.csv for DE analysis because it has the transcript IDS!!!! AHHHHH
+
+# wow this is a fossilized problem
+
+
+
+# some have NAs for gene_name, which is the LOC I need 
+# so switching to filter down by that 
+Merged_Eff_DEGS_U <- Merged_Eff_DEGS[!duplicated(Merged_Eff_DEGS$gene_name), ] # no duplicated LOCs entries
 head(Merged_Eff_DEGS_U)
-dim(Merged_Eff_DEGS_U) # 58 genes back to same as in the Eff DEG list
-# however the only thing we want is the ref_gene_id because those are the only ones in the reference
-Merged_Eff_DEGS_U_RGI <- drop_na(Merged_Eff_DEGS_U, ref_gene_id)
-head(Merged_Eff_DEGS_U_RGI)
-dim(Merged_Eff_DEGS_U_RGI) # 29 Effluent DEGs that have a ref_gene_ID 
+dim(Merged_Eff_DEGS_U) # 61 genes, not sure why this is more than the number of DEGs
+#anyways there are some NAs so those need to go away, only want to search by LOC so any NA is useless 
+Merged_Eff_DEGS_U_LOC <- drop_na(Merged_Eff_DEGS_U, gene_name)
+head(Merged_Eff_DEGS_U_LOC)
+dim(Merged_Eff_DEGS_U_LOC) # 60... huh this is still 2 more whats up
+# the only thing that was removed was MSTRG.2339 I guess 
+# good thing I can look at the file!
+# hmmm this looks like it's because there can be multiple LOC### per MSTRG.... 
+# ok how about I search some in the ref and see what comes up 
+# LOC111121218 and LOC111119544 are both from MSTRG.5660 which probably means isoforms?
+# grep -w LOC111121218 ref_C_virginica-3.0_top_level.gff3
+# has only one XP XP_022318091.1
+# grep -w LOC111119544 ref_C_virginica-3.0_top_level.gff3
+# has a different XP XP_022315497.1 but same annotation basically "ADP-ribosylation factor-like" so it will probably have the same GO terms??
+# I don't know if I can figure out which one of these was actually expressed/other ones with multiple for each MSTRG, because all I have for those is MSTRG, no other strings 
+# this might be a problem if there are artifically inflated numbers of certain GO terms....
+# it's also interesting that some have a LOC but no ref_gene_id...
+
+# not sure if there is anything I can do about this
+# for now just move on
+
+
+# do opposite orfer of subestting
+# drop NAs in gene_name first
+which(is.na(Merged_Eff_DEGS$gene_name)) # 5 rows 
+Merged_Eff_DEGS_D <- drop_na(Merged_Eff_DEGS, gene_name)
+dim(Merged_Eff_DEGS_D) #  119  which is 124 - 5 so good here
+# then remove duplicated LOCs
+Merged_Eff_DEGS_D_LOC <- Merged_Eff_DEGS_D[!duplicated(Merged_Eff_DEGS_D$gene_name), ] 
+dim(Merged_Eff_DEGS_D_LOC) # 60 
+head(Merged_Eff_DEGS_D_LOC)
 ```
 # GOOD 
 
 do the same as above with all expressed genes
 
 ```{r}
-Merged_all_genes <- filter(Merged_AnnotGTF_transcript, gene_id%in%filtered_counts$gene_id)
+Merged_all_genes <- filter(Merged_AnnotGTF_transcript_autosome, gene_id%in%filtered_counts$gene_id) #MAKE SURE TO USE AUTOSOMES
 head(Merged_all_genes)
-dim(Merged_all_genes) # 93919 but actual number of expressed genes is 34582 
-Merged_all_genes_U <- Merged_all_genes[!duplicated(Merged_all_genes$gene_id), ]
+dim(Merged_all_genes) # 93864 but actual number of expressed genes is 34582 
+Merged_all_genes_U <- Merged_all_genes[!duplicated(Merged_all_genes$gene_name), ] # no duplicated LOCs entries
 head(Merged_all_genes_U)
-dim(Merged_all_genes_U) # now 34582
-# but now need to know how many have a ref_gene_ID
-Merged_all_genes_U_RGI <- drop_na(Merged_all_genes_U, ref_gene_id)
-head(Merged_all_genes_U_RGI)
-dim(Merged_all_genes_U_RGI) # 22997 reference annotated genes expressed in this study 
+dim(Merged_all_genes_U) # now 29404
+# hmmmmm ok I think this is less because 29000ish have a LOC name, and there are no NAs?
+# lets see if it goes down 
+Merged_all_genes_U_LOC <- drop_na(Merged_all_genes_U, gene_name)
+head(Merged_all_genes_U_LOC)
+tail(Merged_all_genes_U_LOC)
+dim(Merged_all_genes_U_LOC) # 29403 so this only got rid of one, like one was removed in the EFF DEGs ones, I wonder if it was the same one? MSTRG.2339?
+grep("MSTRG.2339", Merged_all_genes_U$gene_id) # ahhhh you can use grep in R
+# 20978 20979 20980 21929 21930 21931 so these must be line names
+Merged_all_genes_U[20978:20980,] # some of these have NA for ref_gene_id but have the gene_name, so not it. # and these have MSTRG.2339#
+Merged_all_genes_U[21929:21931,] # no not an NA in here either??? # and these have MSTRG.2339# 
+# huh so how did this one lose one, is it a different one? 
+which(is.na(Merged_all_genes_U$gene_name))
+# 19
+Merged_all_genes_U[19,]
+# MSTRG.63 XLOC_000043
+# huh 
+which(is.na(Merged_all_genes$gene_name))
+# ok this is like 3601 genes, which makes more sense that this many wouldn't have a ref 
+# the question is why would the NAs go away when I removed the duplicated gene_names, but leave 2 that weren't removed.... 
+# what if I remove NAs first and then remove duplicate LOC##
+# real glad I never overwrite like any file lololololololololol
+Merged_all_genes_D <- drop_na(Merged_all_genes, gene_name)
+dim(Merged_all_genes_D) # 90263 which is 93864 - 3601 exactly. so that's good. 
+# now drop the duplicate LOCs?
+Merged_all_genes_D_LOC <- Merged_all_genes_D[!duplicated(Merged_all_genes_D$gene_name), ] 
+dim(Merged_all_genes_D_LOC) # 29403 ok so this is what would happen if I did remove duplicates then drop NAs. so this should be good. Not sure why some NAs hung on. 
+head(Merged_all_genes_D_LOC)
 
+
+# ok what about the big one
+grep("MSTRG.2339", Merged_all_genes$gene_id) 
+# 3430 68619 68620 68621 68622 68623 68624 68625 68626 68627 68628 68629 68630 68631 68632 68633 68634 68635 68636 68637 68638 68639 68640 68641 68642 68643
+# 68644 71549 71550 71551 71552 71553 71554 71555 71556 71557 71558 71559 71560 71561 71562 71563 71564 71565 71566 71567 71568 71569 71570 71571 71572 71573
+# 71574 71575 71576 74137 74138
+Merged_all_genes[3430,] # ok nice this is it 
+# it just seems weird that this is the only one with none of the gene_names are duplicated that doesn't have a gene_name
+# there aren't XLOCs in any other file so I can't really do anything with it. 
+# So...ignore it?
+
+
+
+
+
+
+#runique <- unique(Merged_all_genes_U_RGI$ref_gene_id)
+#dim(runique)
+#dim(Merged_all_genes_U_RGI[!duplicated(Merged_all_genes_U_RGI$ref_gene_id), ])
 ```
 
 # GOOD 
@@ -118,43 +264,122 @@ don't like how I have to separate out the attributes column.. would read.gtf wor
 ```{r}
 ref3 <- read.gtf("ref_C_virginica-3.0_top_level.gff3", attr = c("split"), features = NULL, quiet = FALSE)
 head(ref3)
-dim(ref3) # 1513272
-# ok this has the same ammount of lines as using read.gff3 but separates it out a lot more so I guess this is what I should use
-# but it has it out to 50 columns
-# most of that is not needed...
+dim(ref3) 
+# cut out some extra columns 
+ref3_s <- ref3[,c(1,3,4,5,10,11,21,25,26)] 
+head(ref3_s)
+
+# ok so what I need is XPs and LOCs, do those come together?
+tail(ref3_s)
+# look at a random section
+ref3_s[800:860,]
+# 1513272 entries
+# ok so those say XP and have a gene and are CDS
+# can I use * in R??
+# no but . can mean a character https://blog.exploratory.io/filter-with-text-data-952df792c2ba
+ref3_XP <- ref3_s %>%
+  filter(str_detect(Name,'XP_...........'))
+# 645355
+head(ref3_XP)
+# ok don't really need all of these
+ref3_XP <- ref3_XP[,c(1,3:4,6:7)] 
+head(ref3_XP)
+# or did I.... the same gene can have different coding sequences, so different lengths, but all the same XP. How would I know which one? 
+# or is this when I have to add them all up and take the mean? How the f would I do that 
+# https://community.rstudio.com/t/how-to-average-mean-variables-in-r-based-on-the-level-of-another-variable-and-save-this-as-a-new-variable/8764/7
+# first calculate lenth for each CDS
+ref3_XP$length <- ref3_XP$end  - ref3_XP$start 
+head(ref3_XP)
+
+
+# ok these are all the lengths of the CDS
+# some of them are really different 
+# XP_022303032.1	LOC111110729 has CDS of both 96 and 1096... 
+# I don't know if I'm able to tell which one I've got expressed anymore... 
+ref3_mean_by_XP <- ref3_XP %>% 
+  group_by(Name) %>% 
+  summarize(averaged.length = mean(length))
+head(ref3_mean_by_XP)
+dim(ref3_mean_by_XP) #60201 
+# hmmm this got rid of a lot of things
+# interesting that there are 60,000 unique XPs... 
+# ok maybe that's right there are 60214 XPs in the GO sequence file
+# also there are half base pair lengths lol
+
+
+
+# OLD
 
 # I think that ID is the column I need
 # I also want to sort feature into gene
 # not sure how to add up all CDS without messing that up so I will try just do by gene for lengths
-ref3_gene <- ref3 %>%
-  filter(feature == 'gene')
-head(ref3_gene)
-dim(ref3_gene) # 39505 is that right? That there are 39,000 genes?
+# ref3_gene <- ref3 %>%
+  #filter(feature == 'gene')
+#head(ref3_gene)
+#dim(ref3_gene) # 39505 is that right? That there are 39,000 genes?
 # I guess?
 
 # cut out a lot of columns I don't need
-ref3_gene <- ref3_gene[,c(1,3:5,9:11)]
-head(ref3_gene)
-colnames(ref3_gene) <- c("chromosome", "feature", "start", "stop", "ref_gene_id", "dbxref", "name")
-ref3_gene$length <- ref3_gene$stop  - ref3_gene$start
-head(ref3_gene)
+#ref3_gene <- ref3_gene[,c(1,3:5,9:11)]
+#head(ref3_gene)
+#colnames(ref3_gene) <- c("chromosome", "feature", "start", "stop", "ref_gene_id", "dbxref", "name")
+#ref3_gene$length <- ref3_gene$stop  - ref3_gene$start
+#head(ref3_gene)
 ```
+
+File parsing ... 1513272 rows processed
+Attribute splitting ... 11600739 pairs processed
+Attribute sorting ... 42 tags found
+Attribute binding ...
+done
+
+
+
+
 
 take all expressed genes and pass it through the reference so that would be the length for all expressed genes
 
+using LOC 
 ```{r}
-All_expressed_genes_ref <- filter(ref3_gene, ref_gene_id%in%Merged_all_genes_U_RGI$ref_gene_id)
+All_expressed_genes_ref <- filter(ref3_XP, gene%in%Merged_all_genes_D_LOC$gene_name)
 head(All_expressed_genes_ref)
-dim(All_expressed_genes_ref) # 22993 
-# why is this 5 less than the all genes list?? what genes were in that that don't actually exist????
+dim(All_expressed_genes_ref) # 576726 
+# ok but there are a lot of dups in here 
 
+# so I should move this through the XP length one??? 
+# then I only get XPs and length which is nice
+All_expressed_genes_XP <- filter(ref3_mean_by_XP, Name%in%All_expressed_genes_ref$Name)
+head(All_expressed_genes_XP)
+dim(All_expressed_genes_XP) # 49987
+
+# Ok now I need XP information for the EFF DEGs though because it's an extra step to link all these together
+head(Merged_Eff_DEGS_D_LOC)
+dim(Merged_Eff_DEGS_D_LOC) # 60
+EFF_DEG_genes_ref <- filter(ref3_XP, gene%in%Merged_Eff_DEGS_D_LOC$gene_name)
+head(EFF_DEG_genes_ref) 
+# now Name is the XP, and they are duped
+# so put it through the XP length one? Shouldn't hurt. In theory it is the same as removing all duplicated XPs. lol let's try both 
+dup_check <- EFF_DEG_genes_ref[!duplicated(EFF_DEG_genes_ref$Name), ] 
+dim(dup_check) # 85 hm... 
+EFF_DEG_genes_XP <- filter(ref3_mean_by_XP, Name%in%EFF_DEG_genes_ref$Name)
+dim(EFF_DEG_genes_XP) # 85 
+# so yes these are the same but there are more than the number of differentially expressed genes. 
+# this is because the same MSTRG could have multiple LOC### but this is more than the 60 in Merged_Eff_DEGS_D_LOC
+# I don't know why this is like this
+
+
+
+
+
+
+# OLD 
 # what is the all genes list look like ordered?
-ordered <-Merged_all_genes_U_RGI[order(Merged_all_genes_U_RGI$ref_gene_id),]
-head(ordered)
+# ordered <-Merged_all_genes_U_RGI[order(Merged_all_genes_U_RGI$ref_gene_id),]
+# head(ordered)
 # ok that doesn't work because it goes from gene 1 to gene 1000 but I guess it's right? 
 # I don't know how to check any other way
 
-head(All_expressed_genes_ref)
+# head(All_expressed_genes_ref)
 
 ```
 
@@ -186,6 +411,30 @@ Hmmm not sure what this means. There are only a few genes sooooo
 
 Prepare GO terms
 
+load in new go term dataset 
+```{r}
+XP_seq <- read.delim("XP_sequences_Cvirginica_GCF_002022765.2_GO.clean.tab", sep = "\t")
+head(XP_seq)
+
+# had this error when trying to use read.table
+#Error in scan(file = file, what = what, sep = sep, quote = quote, dec = dec,  : 
+ # line 753 did not have 6 elements
+# read delim works
+# but what is that line?
+
+XP_seq[750:760,]
+# ok these all look fine??
+
+# ok now what tho
+
+
+
+
+
+
+```
+
+NO WRONG GO TERMS
 Ok what I need is a dataframe with two columns only, and if a gene has more than one GO term I need to make that a new line. So there can be duplicates on the gene_id column 
 
 ```{r}
@@ -233,6 +482,17 @@ GO.terms3$GO_id <- as.factor(GO.terms3$GO_id)
 GO.terms3$gene_id <- as.factor(GO.terms3$gene_id)
 head(GO.terms3)
 ```
+
+```{r}
+print(Eff_DEG_names)
+# hmmmm none of these gene names are in the GO term list 
+terms <- filter(GO.terms3, gene_id%in%Merged_Eff_DEGS_U_RGI$ref_gene_id)
+
+```
+
+
+
+
 
 Note that some of the gene categories have been returned as ”NULL”. This means that a
 GO category could not be found in the database for one of the genes. In the goseq command,
@@ -293,24 +553,46 @@ Merged_pCO2_DEGS <- filter(Merged_AnnotGTF_transcript, gene_id%in%pCO2_DEGlist$g
 head(Merged_pCO2_DEGS)
 dim(Merged_pCO2_DEGS) # 175 genes
 # but some of these are duplicated because of multiple transcripts
-Merged_Eff_DEGS_U <- Merged_Eff_DEGS[!duplicated(Merged_Eff_DEGS$gene_id), ] # no duplicated gene_id entries
-head(Merged_Eff_DEGS_U)
-dim(Merged_Eff_DEGS_U) # 58 genes back to same as in the Eff DEG list
+Merged_pCO2_DEGS_U <- Merged_pCO2_DEGS[!duplicated(Merged_pCO2_DEGS$gene_id), ] # no duplicated gene_id entries
+head(Merged_pCO2_DEGS_U)
+dim(Merged_pCO2_DEGS_U) # 75 genes back to same as in the pCO2 DEG list
 # however the only thing we want is the ref_gene_id because those are the only ones in the reference
-Merged_Eff_DEGS_U_RGI <- drop_na(Merged_Eff_DEGS_U, ref_gene_id)
-head(Merged_Eff_DEGS_U_RGI)
-dim(Merged_Eff_DEGS_U_RGI) # 29 Effluent DEGs that have a ref_gene_ID 
+Merged_pCO2_DEGS_U_RGI <- drop_na(Merged_pCO2_DEGS_U, ref_gene_id)
+head(Merged_pCO2_DEGS_U_RGI)
+dim(Merged_pCO2_DEGS_U_RGI) # 38 pCO2 DEGs that have a ref_gene_ID 
+```
+
+```{r}
+pCO2_DEG_names <- as.vector(Merged_pCO2_DEGS_U_RGI$ref_gene_id) #use names of all DEG eff names w/ref_gene_id 
+#Make vector of all expressed  genes  with
+#non-differentially expressed genes as 0 and differentially expressed genes as 1
+pCO2_gene_vector=as.integer(All_expressed_genes_ref$ref_gene_id%in%pCO2_DEG_names)
+names(pCO2_gene_vector)=All_expressed_genes_ref$ref_gene_id # give the vector names with the names of the ref_gene_ID
+head(pCO2_gene_vector) # ok in theory there are only 38 out of the 22993 that have a 1 so not surprising that the first few don't have a 1 
+
+#Calculate Probability Weighting Function
+pCO2_DEG_pwf<-nullp(pCO2_gene_vector, ID_vector, bias.data=length_vector) #weight vector by length of gene
+
 ```
 
 
 
 
+```{r}
+pCO2.GO.wall<-goseq(pCO2_DEG_pwf, ID.vector, gene2cat=GO.terms3, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
+```
+NAs introduced by coercionNAs introduced by coercionUsing manually entered categories.
+Calculating the p-values...
+'select()' returned 1:1 mapping between keys and columns
+
+```{r}
+print(pCO2.GO.wall)
 
 
+```
+THERES 3 SIGNIFICANTLY ENRICHED ONES?~???~
 
-
-
-
+wait what does numDEInCat mean vs numInCat
 
 
 
