@@ -8,3 +8,6 @@
 | strand specific | -f .1 -c 3 -s 7 -j 2 | no parameters | 100 | 51.2-59.8 | 42.2 | 132608 |
 | strand specific | --rf | no parameters | 100 | 50.2-59.3| 41.4 | 135112 |
 | strand specific | -t -c 1.5 -f 0.05 (--conservative no longer a useable flag) | no parameters | 100 | 49.2-58.8 | 40.8 | 137896 |
+| strand specific | no parameters | -f 0.1 -F 5 -T 5 | 100 | 74.5-80.3 | 23 | 85265 |
+| strand specific | no parameters | no parameters | 100 | 50.2-58.3 | 41.4 | 135112 |
+| strand specific | -e | no parameters | 100 | 100 | 0 | 67883 |

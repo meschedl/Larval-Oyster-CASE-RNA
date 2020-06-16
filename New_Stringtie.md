@@ -590,3 +590,222 @@ Intron chain level:   100.0     |    50.9    |
 
  Total union super-loci across all input datasets: 65749
 137896 out of 137896 consensus transcripts written in Compare-cons.annotated.gtf (0 discarded as redundant)
+
+
+run with only stringent merge parameters
+
+mkdir merge-only
+
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/*.s.bam .`
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/GCF_002022765.2_C_virginica-3.0_genomic.gff .`
+
+nano stringtie.sh
+```
+#!/bin/bash
+# In the same directory now with the BAM files and the annotation file link
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/merge-only
+
+# StringTie to assemble transcripts for each sample with the annotation file
+array1=($(ls $F/*.bam))
+for i in ${array1[@]}; do
+	stringtie -G $F/GCF_002022765.2_C_virginica-3.0_genomic.gff  -o ${i}.gtf ${i}
+	echo "${i}"
+done
+```
+`nano merge-gtf-list.txt`
+CA_J06.F.trim.fq.gz.s.bam.gtf
+CA_J08.F.trim.fq.gz.s.bam.gtf
+CA_J11.F.trim.fq.gz.s.bam.gtf
+CA_J18.F.trim.fq.gz.s.bam.gtf
+CASE_J03.F.trim.fq.gz.s.bam.gtf
+CASE_J09.F.trim.fq.gz.s.bam.gtf
+CASE_J12.F.trim.fq.gz.s.bam.gtf
+CASE_J13.F.trim.fq.gz.s.bam.gtf
+CON_J02.F.trim.fq.gz.s.bam.gtf
+CON_J05.F.trim.fq.gz.s.bam.gtf
+CON_J10.F.trim.fq.gz.s.bam.gtf
+SE_J01.F.trim.fq.gz.s.bam.gtf
+SE_J04.F.trim.fq.gz.s.bam.gtf
+SE_J07.F.trim.fq.gz.s.bam.gtf
+
+stringtie merge stringent parameters
+`stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -f 0.1 -F 5 -T 5 -o Merged-stringent.gtf merge-gtf-list.txt`
+`gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge-stringent Merged-stringent.gtf`
+
+67891 reference transcripts loaded.
+38 duplicate reference transcripts discarded.
+85265 query transfrags loaded.
+
+#= Summary for dataset: Merged-stringent.gtf
+#     Query mRNAs :   85265 in   50818 loci  (81453 multi-exon transcripts)
+#            (14198 multi-transcript loci, ~1.7 transcripts per locus)
+# Reference mRNAs :   67853 in   39152 loci  (65384 multi-exon)
+# Super-loci w/ reference transcripts:    39105
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    74.8    |
+        Exon level:   100.0     |    74.5    |
+      Intron level:   100.0     |    75.0    |
+Intron chain level:   100.0     |    80.3    |
+  Transcript level:   100.0     |    79.6    |
+       Locus level:   100.0     |    77.0    |
+
+     Matching intron chains:   65384
+       Matching transcripts:   67853
+              Matching loci:   39152
+
+          Missed exons:       0/352731  (  0.0%)
+           Novel exons:  118989/473290  ( 25.1%)
+        Missed introns:       0/310704  (  0.0%)
+         Novel introns:  103155/414521  ( 24.9%)
+           Missed loci:       0/39152   (  0.0%)
+            Novel loci:   11713/50818   ( 23.0%)
+
+ Total union super-loci across all input datasets: 50818
+85265 out of 85265 consensus transcripts written in Compare-merge-stringent.annotated.gtf (0 discarded as redundant)
+Compare-merge-stringent.stats (END)
+
+
+
+
+also want to do no stringtie no merge parameters
+
+mkdir no-parameters
+
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/*.s.bam .`
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/GCF_002022765.2_C_virginica-3.0_genomic.gff .`
+
+nano stringtie.sh
+```
+#!/bin/bash
+# In the same directory now with the BAM files and the annotation file link
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/no-parameters
+
+# StringTie to assemble transcripts for each sample with the annotation file
+array1=($(ls $F/*.bam))
+for i in ${array1[@]}; do
+	stringtie -G $F/GCF_002022765.2_C_virginica-3.0_genomic.gff  -o ${i}.gtf ${i}
+	echo "${i}"
+done
+```
+`nano merge-gtf-list.txt`
+CA_J06.F.trim.fq.gz.s.bam.gtf
+CA_J08.F.trim.fq.gz.s.bam.gtf
+CA_J11.F.trim.fq.gz.s.bam.gtf
+CA_J18.F.trim.fq.gz.s.bam.gtf
+CASE_J03.F.trim.fq.gz.s.bam.gtf
+CASE_J09.F.trim.fq.gz.s.bam.gtf
+CASE_J12.F.trim.fq.gz.s.bam.gtf
+CASE_J13.F.trim.fq.gz.s.bam.gtf
+CON_J02.F.trim.fq.gz.s.bam.gtf
+CON_J05.F.trim.fq.gz.s.bam.gtf
+CON_J10.F.trim.fq.gz.s.bam.gtf
+SE_J01.F.trim.fq.gz.s.bam.gtf
+SE_J04.F.trim.fq.gz.s.bam.gtf
+SE_J07.F.trim.fq.gz.s.bam.gtf
+
+stringtie merge no parameters
+`stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff  -o Merged.gtf merge-gtf-list.txt`
+`gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge Merged.gtf`
+67891 reference transcripts loaded.
+38 duplicate reference transcripts discarded.
+135112 query transfrags loaded.
+
+#= Summary for dataset: Merged.gtf
+#     Query mRNAs :  135112 in   66482 loci  (125406 multi-exon transcripts)
+#            (21748 multi-transcript loci, ~2.0 transcripts per locus)
+# Reference mRNAs :   67853 in   39152 loci  (65384 multi-exon)
+# Super-loci w/ reference transcripts:    38969
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    59.1    |
+        Exon level:   100.0     |    55.9    |
+      Intron level:   100.0     |    59.3    |
+Intron chain level:   100.0     |    52.1    |
+  Transcript level:   100.0     |    50.2    |
+       Locus level:   100.0     |    58.6    |
+
+     Matching intron chains:   65384
+       Matching transcripts:   67853
+              Matching loci:   39152
+
+          Missed exons:       0/352731  (  0.0%)
+           Novel exons:  273999/631712  ( 43.4%)
+        Missed introns:       6/310704  (  0.0%)
+         Novel introns:  210653/523936  ( 40.2%)
+           Missed loci:       0/39152   (  0.0%)
+            Novel loci:   27513/66482   ( 41.4%)
+
+ Total union super-loci across all input datasets: 66482
+135112 out of 135112 consensus transcripts written in Compare-merge.annotated.gtf (0 discarded as redundant)
+
+also want to try with -e flag to limit
+
+mkdir ref-transcripts-only
+
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/*.s.bam .`
+`ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/GCF_002022765.2_C_virginica-3.0_genomic.gff .`
+
+nano stringtie-e.sh
+```
+#!/bin/bash
+# In the same directory now with the BAM files and the annotation file link
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/ref-transcripts-only
+
+# StringTie to assemble transcripts for each sample with the annotation file
+array1=($(ls $F/*.bam))
+for i in ${array1[@]}; do
+	stringtie -G $F/GCF_002022765.2_C_virginica-3.0_genomic.gff -e -o ${i}.gtf ${i}
+	echo "${i}"
+done
+```
+`nano merge-gtf-list.txt`
+CA_J06.F.trim.fq.gz.s.bam.gtf
+CA_J08.F.trim.fq.gz.s.bam.gtf
+CA_J11.F.trim.fq.gz.s.bam.gtf
+CA_J18.F.trim.fq.gz.s.bam.gtf
+CASE_J03.F.trim.fq.gz.s.bam.gtf
+CASE_J09.F.trim.fq.gz.s.bam.gtf
+CASE_J12.F.trim.fq.gz.s.bam.gtf
+CASE_J13.F.trim.fq.gz.s.bam.gtf
+CON_J02.F.trim.fq.gz.s.bam.gtf
+CON_J05.F.trim.fq.gz.s.bam.gtf
+CON_J10.F.trim.fq.gz.s.bam.gtf
+SE_J01.F.trim.fq.gz.s.bam.gtf
+SE_J04.F.trim.fq.gz.s.bam.gtf
+SE_J07.F.trim.fq.gz.s.bam.gtf
+
+stringtie merge with -e
+
+doesn't really need to be merged but need to see how many loci
+`stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Merged-e.gtf merge-gtf-list.txt`
+`gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge-e Merged-e.gtf`
+
+67891 reference transcripts loaded.
+  38 duplicate reference transcripts discarded.
+  67883 query transfrags loaded.
+
+  #= Summary for dataset: Merged-e.gtf
+  #     Query mRNAs :   67883 in   39152 loci  (65414 multi-exon transcripts)
+  #            (11433 multi-transcript loci, ~1.7 transcripts per locus)
+  # Reference mRNAs :   67853 in   39152 loci  (65384 multi-exon)
+  # Super-loci w/ reference transcripts:    39152
+  #-----------------| Sensitivity | Precision  |
+          Base level:   100.0     |   100.0    |
+          Exon level:   100.0     |   100.0    |
+        Intron level:   100.0     |   100.0    |
+  Intron chain level:   100.0     |   100.0    |
+    Transcript level:   100.0     |   100.0    |
+         Locus level:   100.0     |   100.0    |
+
+       Matching intron chains:   65384
+         Matching transcripts:   67853
+                Matching loci:   39152
+
+            Missed exons:       0/352731  (  0.0%)
+             Novel exons:       0/352757  (  0.0%)
+          Missed introns:       0/310704  (  0.0%)
+           Novel introns:       0/310704  (  0.0%)
+             Missed loci:       0/39152   (  0.0%)
+              Novel loci:       0/39152   (  0.0%)
+
+   Total union super-loci across all input datasets: 39152
+  67883 out of 67883 consensus transcripts written in Compare-merge-e.annotated.gtf (0 discarded as redundant)
