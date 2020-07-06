@@ -1,4 +1,162 @@
-New stringtie
+# Re-running stringtie with new Hisat2 data, and optimizing the parameters
+
+**Basically all parameters for running Stringtie and Stringtie merge were tested, see table. The parameters ultimately used are first, and below those are all the tests.**
+
+
+
+
+| Hisat2 type | stringtie type| merge type | sensitivity% | precision% | novel loci% | # query transfrags |
+|---|---|---|---|---|---|---|
+| not strand specific | no parameters | no parameters | 99.9-100 | 62.5-90.5 | 17.5 | 108646 |
+| strand specific | --rf -f .1 -c 3 -s 7 -j 2 | no parameters | 100 | 51.2-59.8 | 42.2 | 132608 |
+| strand specific | --rf -f .1 -c 3 -s 7 -j 2 | -f 0.1 | 100 | 57.9-64.1 | 42.1 | 112319 |
+| strand specific | --rf -f .1 -c 3 -s 7 -j 2 | -f 0.1 -F 1 -T 1 | 100 | 57.9-64.1 | 42.1 | 112319 |
+| strand specific | --rf -f .1 -c 3 -s 7 -j 2 | -f 0.1 -F 5 -T 5 | 100 | 74.4-80.2| 23.5| 85417 |
+| strand specific | -f .1 -c 3 -s 7 -j 2 | no parameters | 100 | 51.2-59.8 | 42.2 | 132608 |
+| strand specific | --rf | no parameters | 100 | 50.2-59.3| 41.4 | 135112 |
+| strand specific | -t -c 1.5 -f 0.05 (--conservative no longer a useable flag) | no parameters | 100 | 49.2-58.8 | 40.8 | 137896 |
+| strand specific | no parameters | -f 0.1 -F 5 -T 5 | 100 | 74.5-80.3 | 23 | 85265 |
+| strand specific | no parameters | no parameters | 100 | 50.2-58.3 | 41.4 | 135112 |
+| strand specific | -e | no parameters | 100 | 100 | 0 | 67883 |
+
+
+**The Stringtie Used for further analysis: in table that resulted in 85417 query transfrags, using the most stringent parameters**
+
+
+```
+mkdir most-parameters-C
+cd most-parameters-C
+ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/*.s.bam .
+ln -s /home/mschedl/Working-CASE-RNA/2020-New-Analysis/GCF_002022765.2_C_virginica-3.0_genomic.gff .
+```
+Write script for first run of stringtie to estimate transcripts
+`nano stringtie-1.sh`
+```
+#!/bin/bash
+# In the same directory now with the BAM files and the annotation file link
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/most-parameters-C
+
+# StringTie to assemble transcripts for each sample with the annotation file
+array1=($(ls $F/*.bam))
+for i in ${array1[@]}; do
+	stringtie -G $F/GCF_002022765.2_C_virginica-3.0_genomic.gff -C ${i}_refs.gtf --rf -f .1 -c 3 -s 7 -j 2 -o ${i}.gtf ${i}
+	echo "${i}"
+done
+```
+`nohup bash stringtie-1.sh`
+
+Create list to merge the gtf files
+
+`nano merge-gtf-list.txt`
+CA_J06.F.trim.fq.gz.s.bam.gtf
+CA_J08.F.trim.fq.gz.s.bam.gtf
+CA_J11.F.trim.fq.gz.s.bam.gtf
+CA_J18.F.trim.fq.gz.s.bam.gtf
+CASE_J03.F.trim.fq.gz.s.bam.gtf
+CASE_J09.F.trim.fq.gz.s.bam.gtf
+CASE_J12.F.trim.fq.gz.s.bam.gtf
+CASE_J13.F.trim.fq.gz.s.bam.gtf
+CON_J02.F.trim.fq.gz.s.bam.gtf
+CON_J05.F.trim.fq.gz.s.bam.gtf
+CON_J10.F.trim.fq.gz.s.bam.gtf
+SE_J01.F.trim.fq.gz.s.bam.gtf
+SE_J04.F.trim.fq.gz.s.bam.gtf
+SE_J07.F.trim.fq.gz.s.bam.gtf
+
+Run stringtie merge with most parameters
+
+`stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Cvir-merged-fFT-C.gtf -f 0.1 -F 5 -T 5 merge-gtf-list.txt`
+
+Run gffcompare just to make sure adding the -c parameter didn't change the statisitcs
+
+`gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge-fFT-C Cvir-merged-fFT-C.gtf`
+
+Output Stats file:
+```
+67891 reference transcripts loaded.
+38 duplicate reference transcripts discarded.
+85417 query transfrags loaded.
+
+#= Summary for dataset: Cvir-merged-fFT-C.gtf
+#     Query mRNAs :   85417 in   51155 loci  (81538 multi-exon transcripts)
+#            (14145 multi-transcript loci, ~1.7 transcripts per locus)
+# Reference mRNAs :   67853 in   39152 loci  (65384 multi-exon)
+# Super-loci w/ reference transcripts:    39108
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    74.6    |
+        Exon level:   100.0     |    74.4    |
+      Intron level:   100.0     |    74.8    |
+Intron chain level:   100.0     |    80.2    |
+  Transcript level:   100.0     |    79.4    |
+       Locus level:   100.0     |    76.5    |
+
+     Matching intron chains:   65384
+       Matching transcripts:   67853
+              Matching loci:   39152
+
+          Missed exons:       0/352731  (  0.0%)
+           Novel exons:  120058/474258  ( 25.3%)
+        Missed introns:       0/310704  (  0.0%)
+         Novel introns:  104083/415371  ( 25.1%)
+           Missed loci:       0/39152   (  0.0%)
+            Novel loci:   12047/51155   ( 23.5%)
+
+ Total union super-loci across all input datasets: 51155
+85417 out of 85417 consensus transcripts written in Compare-merge-fFT-C.annotated.gtf (0 discarded as redundant)
+```
+Run stringtie again to re-estimate transcript abundance
+
+`nano stringtie-2.sh`
+```
+#!/bin/bash
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/most-parameters-C
+array1=($(ls $F/*.bam))
+  #Re-estimate transcript abundance
+	for i in ${array1[@]}; do
+		stringtie -e -G $F/Cvir-merged-fFT-C.gtf -o $(echo ${i}|sed "s/\..*//").merge.gtf ${i}
+		echo "${i}"
+	done
+	# input here is the original set of alignment bam files
+	# here -G refers to the merged GTF files
+	# -e creates more accurate abundance estimations with input transcripts, needed when converting to DESeq2 tables, says in the manual that this is recommended
+echo "DONE" $(date)
+```
+
+Then to prepare this for DE analysis I want to use the prepDE script
+
+Downlaod the script:  
+`wget http://ccb.jhu.edu/software/stringtie/dl/prepDE.py`
+
+`chmod u+x prepDE.py`
+
+Create list of input file paths
+
+`nano prep.sh`
+```
+#!/bin/bash
+
+F=/home/mschedl/Working-CASE-RNA/2020-New-Analysis/most-parameters-C
+
+
+array2=($(ls *merge.gtf))
+
+for i in ${array2[@]}; do
+    echo "$(echo ${i}|sed "s/\..*//") $F/${i}" >> sample_list.txt
+done
+```
+Create environment for python version 2.7 and run script
+
+`conda create -n py27 python=2.7`
+`conda activate py27`
+
+`python prepDE.py -i sample_list.txt`
+
+
+
+
+### Troubleshooting below: 
+
+
 
 -f <0.0-1.0>	Sets the minimum isoform abundance of the predicted transcripts as a fraction of the most abundant transcript assembled at a given locus. Lower abundance transcripts are often artifacts of incompletely spliced precursors of processed transcripts. Default: 0.01
 
@@ -150,6 +308,7 @@ FP (false positives) then is the number of bases which are only covered by any p
 
 
 old stringtie (did not have any strand information and did not have any stringent parameters):
+```
 #= Summary for dataset: C_Vir_ST_merged_NO_A_test.gtf
 #     Query mRNAs :  108646 in   45439 loci  (100665 multi-exon transcripts)
 #            (16934 multi-transcript loci, ~2.4 transcripts per locus)
@@ -205,7 +364,7 @@ Intron chain level:   100.0     |    53.4    |
 
  Total union super-loci across all input datasets: 67496
 132608 out of 132608 consensus transcripts written in Cvir-compare.annotated.gtf (0 discarded as redundant)
-
+```
 
 this is a huge decreseas in precision..
 
@@ -249,7 +408,7 @@ look at comparsion again
  less query transfrags. now this is interesting, how are there less? Ohhhh there are less because the -f parameter is a proportion, so even though I had it as a proportion in the individual gtf files, this is a proportion accross all of them?
 
  ok so this increased the precision but not by a lot
-
+```
  #= Summary for dataset: 2020-Cvir-merged-f.gtf
 #     Query mRNAs :  112319 in   67362 loci  (102080 multi-exon transcripts)
 #            (18285 multi-transcript loci, ~1.7 transcripts per locus)
@@ -276,7 +435,7 @@ Intron chain level:   100.0     |    64.1    |
 
  Total union super-loci across all input datasets: 67362
 112319 out of 112319 consensus transcripts written in Cvir-compare-f.annotated.gtf (0 discarded as redundant)
-
+```
 Interesting that the novel loci is the same.. looks like novel exons and novel introns went down, but mostly exons.
 Still the same number of novel loci, so maybe this didn't take care of the issue
 
@@ -306,6 +465,7 @@ ok so it is exactly the same. I will try with 5 for each of those parameters now
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Cvir-compare-fFT 2020-Cvir-merged-fFT.gtf`
 
 ok this wildly cut down
+```
 67891 reference transcripts loaded.
  38 duplicate reference transcripts discarded.
  85417 query transfrags loaded.
@@ -337,7 +497,7 @@ ok this wildly cut down
 
   Total union super-loci across all input datasets: 51155
  85417 out of 85417 consensus transcripts written in Cvir-compare-fFT.annotated.gtf (0 discarded as redundant)
-
+```
  what I'm thinking is precision is going up because novel loci is going down. And these are things with I guess low reads/counts so they might not be real. hard to say
 
  not sure if I should increase parameters again or not
@@ -413,7 +573,9 @@ SE_J07.F.trim.fq.gz.s.bam.gtf
 
 Basic stringtie merge no parameters
 `stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Merged-no-rf.gtf merge-gtf-list.txt`
+
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-no-rf Merged-no-rf.gtf`
+```
 67891 reference transcripts loaded.
   38 duplicate reference transcripts discarded.
   132608 query transfrags loaded.
@@ -446,7 +608,7 @@ Intron chain level:   100.0     |    53.4    |
 
  Total union super-loci across all input datasets: 67496
 132608 out of 132608 consensus transcripts written in Compare-no-rf.annotated.gtf (0 discarded as redundant)
-
+```
 looks the same as the stringent stringtie with strandedness.... so the strandedness is not causing the increase in novel loci. This is strange
 
 what about the only strandedness??
@@ -473,6 +635,7 @@ SE_J07.F.trim.fq.gz.s.bam.gtf
 Basic stringtie merge no parameters
 `stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Merged-rf-only.gtf merge-gtf-list.txt`
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-rf-only Merged-rf-only.gtf`
+```
 67891 reference transcripts loaded.
  38 duplicate reference transcripts discarded.
  135112 query transfrags loaded.
@@ -505,7 +668,7 @@ Intron chain level:   100.0     |    52.1    |
 
  Total union super-loci across all input datasets: 66482
 135112 out of 135112 consensus transcripts written in Compare-rf-only.annotated.gtf (0 discarded as redundant)
-
+```
 ok... this is not much better, percentage of novel loci went down a little but it may not have changed at all if there are more loci in general
 
 what about if I use conservative flag? I guess at this point it doesn't seem to matter if I use rf or not
@@ -559,7 +722,7 @@ SE_J07.F.trim.fq.gz.s.bam.gtf
 Basic stringtie merge no parameters
 `stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Merged-cons.gtf merge-gtf-list.txt`
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-cons Merged-cons.gtf`
-
+```
 67891 reference transcripts loaded.
 38 duplicate reference transcripts discarded.
 137896 query transfrags loaded.
@@ -590,7 +753,7 @@ Intron chain level:   100.0     |    50.9    |
 
  Total union super-loci across all input datasets: 65749
 137896 out of 137896 consensus transcripts written in Compare-cons.annotated.gtf (0 discarded as redundant)
-
+```
 
 run with only stringent merge parameters
 
@@ -631,7 +794,7 @@ SE_J07.F.trim.fq.gz.s.bam.gtf
 stringtie merge stringent parameters
 `stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -f 0.1 -F 5 -T 5 -o Merged-stringent.gtf merge-gtf-list.txt`
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge-stringent Merged-stringent.gtf`
-
+```
 67891 reference transcripts loaded.
 38 duplicate reference transcripts discarded.
 85265 query transfrags loaded.
@@ -663,7 +826,7 @@ Intron chain level:   100.0     |    80.3    |
  Total union super-loci across all input datasets: 50818
 85265 out of 85265 consensus transcripts written in Compare-merge-stringent.annotated.gtf (0 discarded as redundant)
 Compare-merge-stringent.stats (END)
-
+```
 
 
 
@@ -709,7 +872,7 @@ stringtie merge no parameters
 67891 reference transcripts loaded.
 38 duplicate reference transcripts discarded.
 135112 query transfrags loaded.
-
+```
 #= Summary for dataset: Merged.gtf
 #     Query mRNAs :  135112 in   66482 loci  (125406 multi-exon transcripts)
 #            (21748 multi-transcript loci, ~2.0 transcripts per locus)
@@ -736,7 +899,7 @@ Intron chain level:   100.0     |    52.1    |
 
  Total union super-loci across all input datasets: 66482
 135112 out of 135112 consensus transcripts written in Compare-merge.annotated.gtf (0 discarded as redundant)
-
+```
 also want to try with -e flag to limit
 
 mkdir ref-transcripts-only
@@ -779,6 +942,7 @@ doesn't really need to be merged but need to see how many loci
 `stringtie --merge -G GCF_002022765.2_C_virginica-3.0_genomic.gff -o Merged-e.gtf merge-gtf-list.txt`
 `gffcompare -r GCF_002022765.2_C_virginica-3.0_genomic.gff -o Compare-merge-e Merged-e.gtf`
 
+```
 67891 reference transcripts loaded.
   38 duplicate reference transcripts discarded.
   67883 query transfrags loaded.
@@ -809,3 +973,4 @@ doesn't really need to be merged but need to see how many loci
 
    Total union super-loci across all input datasets: 39152
   67883 out of 67883 consensus transcripts written in Compare-merge-e.annotated.gtf (0 discarded as redundant)
+```
